@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הודעת מערכת</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 4px 2px; font-family: "Heebo", system-ui, -apple-system, "Segoe UI", Arial, sans-serif; line-height: 1.6; background: transparent; color: CanvasText; }
+  img, video, iframe { max-width: 100%; }
+</style>
+</head>
+<body>
+<div id="content"></div>
+<script>
+  // This page runs inside a sandboxed frame (no access to the app's storage).
+  // It receives the announcement HTML from the parent and renders it, scripts included.
+  window.addEventListener('message', function (e) {
+    if (!e.data || e.data.type !== 'mm-message') return;
+    var box = document.getElementById('content');
+    box.innerHTML = e.data.html;
+    box.querySelectorAll('script').forEach(function (old) {
+      var s = document.createElement('script');
+      Array.prototype.forEach.call(old.attributes, function (a) { s.setAttribute(a.name, a.value); });
+      s.textContent = old.textContent;
+      old.parentNode.replaceChild(s, old);
+    });
+    var report = function () { parent.postMessage({ type: 'mm-height', h: document.documentElement.scrollHeight }, '*'); };
+    report();
+    setTimeout(report, 300);
+    setTimeout(report, 1500);
+  });
+</script>
+</body>
+</html>

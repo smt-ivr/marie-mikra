@@ -1,0 +1,10 @@
+// Cloudflare deployment config: a static site served from ./public
+// (new version at "/", the original version unchanged at "/legacy/").
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "marie-mikra",
+  "compatibility_date": "2025-10-01",
+  "assets": {
+    "directory": "./public"
+  }
+}
