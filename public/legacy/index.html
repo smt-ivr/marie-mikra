@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ממשק ניהול מארי מקרא</title>
+    <link rel="icon" type="image/png" href="smt.png">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/points-style.css">
+    <link rel="stylesheet" href="css/announcements-style.css">
+    <link rel="stylesheet" href="css/announcements-reply-style.css">
+    <link rel="stylesheet" href="css/tzintuk-style.css">
+    <link rel="stylesheet" href="css/time-style.css">
+    <link rel="stylesheet" href="css/mfa-style.css">
+    <link rel="stylesheet" href="css/system-info-style.css">
+    <link rel="stylesheet" href="css/realtime-calls-style.css">
+    <link rel="stylesheet" href="css/reports-style.css">
+</head>
+<body>
+
+    <header class="main-toolbar">
+        <div class="toolbar-section toolbar-right">
+            <h1 id="project-title"><i class="fas fa-book-open"></i>ממשק ניהול "מארי מקרא"</h1>
+        </div>
+        
+        <div class="toolbar-section toolbar-center"></div>
+
+        <div class="toolbar-section toolbar-left">
+            
+            <button id="settings-btn" class="button button-settings" title="הגדרות"><i class="fas fa-cog"></i></button>
+            
+            <button id="refresh-btn" class="button button-primary"><i class="fas fa-sync-alt"></i> רענן נתונים</button>
+            
+            <button id="announcements-btn" class="button button-info" title="הודעות מערכת" style="position: relative; visibility: hidden;">
+                <i class="fas fa-bell"></i>
+                <span id="unread-count-badge" class="hidden"></span>
+            </button>
+            
+            <button id="realtime-calls-btn" class="button button-realtime" title="שיחות פעילות בזמן אמת" style="visibility: hidden;">
+                <i class="fas fa-phone"></i> <span id="realtime-calls-badge" class="calls-badge hidden">0</span>
+            </button>
+
+            <div id="system-info-container"></div>
+
+            <div class="developer-credit">
+                <span>פיתוח מיוחד עבור ת"ת בת עין צפת | פותח בסייעתא דישמיא ע"י שימי טרייטל</span>
+                <img src="smt.png" alt="SMT Logo" class="logo">
+            </div>
+        </div>
+    </header>
+
+    <div id="settings-modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2><i class="fas fa-sliders-h"></i> הגדרות מערכת</h2>
+                <span class="close-btn" title="סגירה">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="connection-status">
+                    <span class="status-light"></span>
+                    <span id="status-text">בודק סטטוס...</span>
+                </div>
+                <div id="settings-message-area"></div> 
+
+                <form id="settings-form">
+                    <p class="form-description">(ניתן גם להכניס טוקן ידני)</p>
+                    <div class="form-group">
+                        <label for="token-input">טוקן (Token):</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="token-input">
+                            <i class="fa fa-eye" id="toggleToken"></i>
+                        </div>
+                    </div>
+                    <hr class="separator">
+                    <p class="form-description">חידוש טוקן אוטומטי </p>
+                    <div class="form-group">
+                        <label for="username-input">מספר מערכת:</label>
+                        <input type="text" id="username-input" placeholder="מספר מערכת">
+                    </div>
+                    <div class="form-group">
+                        <label for="password-input">סיסמה:</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password-input" placeholder="סיסמת ניהול">
+                            <i class="fa fa-eye" id="togglePassword"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" id="generate-token-btn" class="button button-primary"><i class="fas fa-key"></i> צור טוקן</button>
+                    </div>
+                    <hr class="separator">
+                    <p class="form-description">נתיבי קבצים</p>
+                    <div class="form-group">
+                        <label for="active-test-path-input">נתיב מבחן פעיל:</label>
+                        <input type="text" id="active-test-path-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="points-report-path-input">נתיב דוח נקודות:</label>
+                        <input type="text" id="points-report-path-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="previous-tests-path-input">נתיב דפדוף מבחנים:</label>
+                        <input type="text" id="previous-tests-path-input">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" form="settings-form" class="button button-success"><i class="fas fa-save"></i> שמור הגדרות</button>
+                <button type="button" id="reset-settings-btn" class="button button-danger"><i class="fas fa-undo"></i> איפוס הגדרות</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <div id="initial-status">
+            <div id="loading"><i class="fas fa-spinner fa-spin"></i> מאמת חיבור...</div>
+        </div>
+        <div id="main-content" class="hidden">
+            <nav class="tabs">
+                <button class="tab-button active" data-view="tests-view">ניהול מבחנים</button>
+                <button class="tab-button" data-view="points-view">ניהול נקודות</button>
+                <button class="tab-button" data-view="students-view">ניהול תלמידים</button>
+                <button class="tab-button" data-view="time-view">ניהול זמנים</button>
+                <button class="tab-button" data-view="tzintuk-view">ניהול צינתוקים</button>
+                <button class="tab-button" data-view="logs-view">צפייה בלוגים</button>
+            </nav>
+            <div id="tests-view" class="view">
+                <div id="tests-view-content"></div>
+            </div>
+            <div id="points-view" class="view hidden">
+                <div class="view-actions">
+                    </div>
+                <div id="report-header" class="hidden">
+                    <h2 id="report-title"></h2>
+                    <div id="report-actions">
+                        <button id="archive-points-btn" class="button button-archive"><i class="fas fa-box-archive"></i> ארכוב ואיפוס</button>
+                        <div class="dropdown">
+                            <button class="button button-success"><i class="fas fa-download"></i> יצוא קובץ</button>
+                            <div class="dropdown-content">
+                                <a href="#" id="export-excel-btn"><i class="fas fa-file-excel"></i> Excel</a>
+                                <a href="#" id="export-word-btn"><i class="fas fa-file-word"></i> Word</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="report-container"></div>
+            </div>
+            <div id="students-view" class="view hidden">
+            </div>
+            <div id="time-view" class="view hidden">
+            </div>
+            <div id="tzintuk-view" class="view hidden">
+            </div>
+            
+            <div id="logs-view" class="view hidden">
+                <div id="reports-app-container"></div>
+            </div>
+        </div>
+    </main>
+    
+    <div id="toast-notification">
+        <span id="toast-message"></span>
+        <button id="toast-close-btn">&times;</button>
+    </div>
+
+    <script src="js/migration.js"></script>
+    
+    <script src="js/questions-controller.js"></script>
+    <script src="js/edit-controller.js"></script>
+    <script src="js/archive-process-controller.js"></script>
+    <script src="js/points-edit-controller.js"></script>
+    <script src="js/points-archive-process-controller.js"></script>
+    <script src="js/announcements-controller.js"></script>
+    <script src="js/announcements-reply-controller.js"></script>
+    <script src="js/smti-message-controller.js"></script>
+    <script src="js/tests-controller.js"></script>
+    <script src="js/import-questions-controller.js"></script>
+    <script src="js/archive-controller.js"></script>
+    <script src="js/points-controller.js"></script>
+    <script src="js/points-archive-controller.js"></script>
+    <script src="js/students-controller.js"></script> 
+    <script src="js/time-controller.js"></script> 
+    <script src="js/tzintuk-controller.js"></script>
+    <script src="js/tzintuk-list-controller.js"></script>
+    <script src="js/tzintuk-tasks-controller.js"></script>
+    
+    <script src="js/mfa-controller.js"></script>
+    
+    <script src="js/auth.js"></script>
+    <script src="js/system-info-controller.js"></script>
+    
+    <script src="js/realtime-calls-controller.js"></script>
+
+    <script src="js/reports-controller.js"></script>
+
+    <script src="js/script.js"></script> 
+    
+</body>
+</html>

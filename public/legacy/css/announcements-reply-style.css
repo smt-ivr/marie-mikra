@@ -1,0 +1,122 @@
+/* ========================================================== */
+/* announcements-reply-style.css - עיצובים עבור מודול התגובות */
+/* (גרסה 4 - עיצוב מטא-דאטה של פופאפ)                        */
+/* ========================================================== */
+
+/* 1. כפתור "הגב" בתוך ההודעה */
+.announcement-reply-btn {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    background-color: var(--color-browse); /* צבע כחול */
+}
+.announcement-reply-btn i {
+    margin-inline-end: 4px;
+}
+
+/* 2. כפתור "הצג תגובות" בסרגל הכלים */
+#show-replies-log-btn {
+    background-color: transparent;
+    border: 1px solid var(--color-archive);
+    color: var(--color-archive);
+    padding: 0.4rem 0.8rem;
+}
+#show-replies-log-btn:hover {
+    background-color: var(--color-archive);
+    color: white;
+}
+
+/* 3. בסיס למודאלים (רקע ומיכל) */
+.reply-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    /* === שונה: Z-Index חייב להיות גבוה מהפופאפ (3000) === */
+    /* הפופאפ עצמו ב-3000, אז זה יהיה 3100 */
+    z-index: 3100; 
+    display: none; justify-content: center; align-items: center;
+}
+/* הפופאפ הראשי של ההודעות */
+#announcement-popup-overlay {
+    z-index: 3000;
+}
+
+.reply-modal-overlay.visible { 
+    display: flex; 
+}
+
+/* 4. מודאל שליחת תגובה */
+#reply-modal-textarea {
+    width: 100%;
+    height: 120px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    box-sizing: border-box; /* חשוב ל-width 100% */
+    resize: vertical;
+    margin-top: 0.5rem; /* הוקטן מרווח */
+}
+
+/* 5. מודאל יומן תגובות */
+.reply-log-table td, .reply-log-table th {
+    padding: 0.75rem;
+}
+.log-message-content {
+    white-space: pre-wrap; /* שומר על מעברי שורה */
+    word-break: break-word;
+    max-width: 400px;
+}
+
+/* === 6. בורר אמוג'ים === */
+.emoji-picker-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--color-border);
+}
+.emoji-btn {
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 5px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.emoji-btn:hover {
+    background-color: #e9ecef;
+    border-color: var(--color-primary);
+    transform: scale(1.1);
+}
+
+/* === 7. כפתור הצלחה זמני (ללא alert) === */
+.button-success-temp {
+    background-color: var(--color-success) !important;
+    color: white !important;
+    cursor: default !important;
+    opacity: 1 !important;
+    transition: all 0.3s ease;
+}
+
+/* === 8. נוסף: עיצוב מטא-דאטה של פופאפ === */
+.popup-meta-info {
+    padding: 0.5rem 1.5rem;
+    background-color: var(--color-background);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.9rem;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    direction: ltr;
+    text-align: left;
+}
+.popup-meta-info span {
+    font-weight: 500;
+}
+
+/* === 9. שינוי: התאמת גוף הפופאפ === */
+#announcement-popup-overlay .modal-body {
+    padding-top: 1rem; /* הקטנת פדינג עליון כי יש מטא-דאטה */
+}

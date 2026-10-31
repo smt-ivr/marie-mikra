@@ -1,0 +1,161 @@
+/* css/realtime-calls-style.css */
+
+/* --- כפתור בסרגל העליון (מותאם לכפתורי הסרגל הקיימים) --- */
+#realtime-calls-btn {
+    position: relative;
+    background-color: var(--color-surface); /* צבע רקע רגיל */
+    color: #6c757d;
+    border: 1px solid transparent; /* גבול שקוף כברירת מחדל */
+    transition: all 0.3s ease;
+    
+    /* מידות קבועות זהות לכפתורי המערכת */
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
+    border-radius: var(--border-radius);
+    margin-left: 1px; /* מרווח מהאלמנט הבא */
+}
+
+#realtime-calls-btn:hover {
+    background-color: #e9ecef;
+    color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+/* עיצוב כשיש שיחות פעילות - מסגרת ירוקה עדינה */
+#realtime-calls-btn.has-calls {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border-color: #c8e6c9;
+}
+
+#realtime-calls-btn i {
+    font-size: 1.1rem; /* גודל אייקון מתאים */
+}
+
+/* תגית המספר (Badge) - צף בפינה */
+.calls-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    
+    border-radius: 10px; /* צורה אליפטית */
+    background-color: var(--color-danger); /* אדום כברירת מחדל */
+    color: white;
+    
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 1;
+    
+    border: 2px solid var(--color-surface); /* מסגרת לבנה להפרדה */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+/* הסתרת התגית כשיש 0 */
+.calls-badge.hidden {
+    display: none;
+}
+
+/* תגית כשיש שיחות - ירוק */
+.calls-badge.active {
+    background-color: #2e7d32;
+    animation: badge-pulse 2s infinite;
+}
+
+@keyframes badge-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* --- המודאל --- */
+#realtime-calls-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6); z-index: 2200;
+    display: none; justify-content: center; align-items: center;
+}
+#realtime-calls-modal-overlay.visible { display: flex; }
+
+/* טבלה */
+#realtime-calls-table th {
+    background-color: #f8f9fa;
+    position: sticky;
+    top: 0;
+}
+
+.status-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2e7d32;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #2e7d32;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+}
+
+.name-cell {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.id-cell {
+    color: #6c757d;
+    font-family: monospace;
+    font-size: 0.95em;
+}
+
+.time-cell {
+    font-family: monospace;
+    font-size: 1.1em;
+    direction: ltr;
+    text-align: right;
+}
+
+.empty-state {
+    padding: 2rem;
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-left: auto; /* דוחף שמאלה */
+}
+
+.pulsing-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #2e7d32;
+    border-radius: 50%;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}

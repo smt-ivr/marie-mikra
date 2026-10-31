@@ -1,0 +1,92 @@
+/* css/system-info-style.css */
+
+#system-info-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    
+    /* --- שינוי: רוחב מתאים לתוכן במקום קבוע --- */
+    width: auto;
+    min-width: 180px;
+    max-width: 300px; /* למנוע מזה להיות רחב מדי */
+    height: 42px; /* מעט יותר גבוה לנשימה */
+    
+    /* עיצוב מודרני */
+    font-size: 12px;
+    line-height: 1.2;
+    padding: 0 15px; /* ריווח נדיב יותר בצדדים */
+    margin: 0 0px;
+    
+    background-color: #ffffff;
+    border: 1px solid #e9ecef; /* גבול עדין יותר */
+    border-radius: 20px; /* פינות עגולות (Pill shape) */
+    color: #495057;
+    
+    /* אפקט צללית עדין */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    
+    white-space: nowrap;
+    text-align: right;
+    
+    /* --- שינוי: ביטול סימן השאלה --- */
+    cursor: default; 
+    
+    box-sizing: border-box;
+    overflow: hidden;
+    transition: all 0.3s ease; /* אנימציה עדינה */
+    
+    visibility: hidden;
+}
+
+#system-info-container.loaded {
+    visibility: visible;
+}
+
+/* אפקט ריחוף עדין */
+#system-info-container:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+    border-color: #dee2e6;
+}
+
+.sys-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px; /* רווח גדול יותר בין פריטים */
+    width: 100%;
+}
+
+.sys-divider {
+    color: #dee2e6; /* צבע מפריד בהיר יותר */
+    font-size: 0.9em;
+}
+
+/* הדגשת נתונים */
+.sys-value {
+    font-weight: 600;
+    color: var(--color-browse); /* שימוש בצבע המותג */
+    direction: ltr;
+}
+
+.sys-value.name {
+    font-weight: 700;
+    color: #343a40;
+    direction: rtl;
+    max-width: 140px; /* נותן יותר מקום לשם */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sys-units-warning {
+    color: var(--color-danger);
+    font-weight: 700;
+    animation: pulse-red 2s infinite; /* אנימציה עדינה כשנגמרות היחידות */
+}
+
+@keyframes pulse-red {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}

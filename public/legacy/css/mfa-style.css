@@ -1,0 +1,480 @@
+/* ========================================================== */
+/* mfa-style.css - עיצובים עבור מודאל אימות דו-שלבי      */
+/* (גרסה 5.6 - חלון 600px קבוע)                             */
+/* ========================================================== */
+
+/* הגדרת הפונט הראשי כמו בקובץ שהורדת */
+#mfa-modal-overlay {
+    font-family: Heebo, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* * 1. רקע ומיכל כללי 
+*/
+#mfa-modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(17, 24, 39, 0.5); /* bg-gray-900 bg-opacity-50 */
+    z-index: 2500;
+    display: none; 
+    justify-content: center; 
+    align-items: center;
+}
+#mfa-modal-overlay.visible { 
+    display: flex; 
+}
+
+/* * 2. המודאל עצמו
+ * (*** תיקון ***: max-width קבוע ל-900px)
+*/
+.mfa-modal-container {
+    background-color: #ffffff;
+    border-radius: 0.75rem; /* rounded-xl */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); /* shadow-xl */
+    width: 90%;
+    max-width: 900px; /* -> שונה ל-900px */
+    border: 1px solid #d1d5db;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+/* * 3. כותרת, גוף וכותרת תחתונה
+*/
+#mfa-modal-overlay .modal-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+    background-color: #f9fafb; /* bg-gray-50 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.mfa-modal-title {
+    font-size: 1.25rem; /* text-xl */
+    font-weight: 700; /* font-bold */
+    color: #1f2937; /* text-gray-800 */
+    margin: 0;
+}
+#mfa-modal-overlay .close-btn {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #6b7280; /* text-gray-500 */
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+}
+
+#mfa-modal-overlay .modal-body {
+    padding: 1.5rem 2rem; /* p-6 sm:p-8 */
+    overflow-y: auto;
+    background-color: #ffffff;
+}
+
+/* * 4. שלב 1: בחירת שיטה (סגנון ישן - הוסתר)
+*/
+.mfa-instructions {
+    background-color: #f9fafb; /* bg-gray-50 */
+    border: 1px solid #f3f4f6; /* border-gray-100 */
+    padding: 1rem;
+    border-radius: 0.5rem; /* rounded-lg */
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: #374151; /* text-gray-700 */
+    margin-bottom: 1.5rem;
+}
+.mfa-instructions i {
+    color: var(--color-primary);
+    margin-inline-end: 8px;
+}
+
+/*
+.mfa-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+.mfa-method-box { ... }
+*/
+
+
+/* * 5. שלב 2: בחירת אפשרויות
+*/
+.mfa-options-box {
+    background-color: #f9fafb; /* bg-gray-50 */
+    border: 1px solid #e5e7eb; /* border-gray-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+.mfa-options-box strong {
+    font-size: 1rem;
+    font-weight: 600; /* font-semibold */
+    color: #1f2937; /* text-gray-800 */
+    display: block;
+    margin-bottom: 0.75rem;
+}
+#mfa-step2-details-value {
+    font-weight: 500;
+    color: #374151;
+}
+/* כיווניות לשפופרת */
+#mfa-step2-details-value span[dir="ltr"] {
+    display: inline-block;
+}
+
+/* כפתורי רדיו */
+#mfa-step2-radio-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.mfa-radio-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.mfa-radio-option input[type="radio"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    color: var(--color-primary);
+    border-color: #9ca3af;
+}
+.mfa-radio-option label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/* אזור "זכור אותי" */
+.mfa-remember-section {
+    background-color: #ffffff; /* רקע לבן כמו במקור */
+}
+.mfa-remember-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+}
+.mfa-remember-checkbox input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    border-color: #9ca3af;
+    color: var(--color-primary);
+}
+.mfa-remember-checkbox label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1f2937; /* text-gray-800 */
+    cursor: pointer;
+}
+.mfa-remember-note-wrapper {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #ccc;
+    transition: opacity 0.2s ease;
+}
+.mfa-remember-note-wrapper label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4b5563; /* text-gray-600 */
+}
+#mfa-remember-note {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem; /* rounded-lg */
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    font-size: 0.95rem;
+    transition: background-color 0.2s ease;
+}
+#mfa-remember-note:disabled {
+    background-color: #f9fafb; /* bg-gray-50 */
+    cursor: not-allowed;
+}
+#mfa-remember-note:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); /* התאמה ל-style.css */
+}
+
+/* * 6. שלב 3: הזנת קוד
+*/
+.mfa-code-container {
+    padding: 1rem 0;
+    text-align: center;
+}
+.mfa-code-container h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+.mfa-code-container p {
+    color: #4b5563;
+    margin-bottom: 1rem;
+}
+.mfa-code-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db; /* border-gray-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    box-sizing: border-box;
+    direction: ltr;
+    text-align: center;
+    font-size: 2rem; /* text-3xl */
+    letter-spacing: 0.5rem;
+    margin: 1rem 0;
+    font-family: monospace;
+}
+.mfa-code-input:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25); /* התאמה ל-style.css */
+}
+
+/* * 7. כפתורי פעולה כלליים
+*/
+.mfa-step-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #f3f4f6; /* border-gray-100 */
+}
+.mfa-step-actions .button {
+    font-size: 0.95rem;
+    padding: 0.6rem 1.2rem;
+    font-weight: 600; /* font-medium */
+}
+
+/* * 8. הודעות שגיאה וסטטוס
+*/
+.mfa-message-box {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+.mfa-message-box h2 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+.mfa-message-box p {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+}
+.mfa-loading-icon {
+    font-size: 2rem;
+    color: var(--color-primary);
+}
+.mfa-success-icon {
+    font-size: 2rem;
+    color: #16a34a; /* text-green-600 */
+}
+.mfa-error-icon {
+    font-size: 2rem;
+    color: #dc2626; /* text-red-600 */
+}
+
+.mfa-error-message {
+    font-size: 0.9em;
+    padding: 10px;
+    color: #b91c1c; /* text-red-700 */
+    background-color: #fee2e2; /* bg-red-50 */
+    border: 1px solid #fecaca; /* border-red-200 */
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+.mfa-info-message {
+    text-align: center;
+    padding: 1rem;
+    font-size: 1rem;
+    border: 1px solid #dbeafe; /* border-blue-200 */
+    background-color: #eff6ff; /* bg-blue-50 */
+    color: #1d4ed8; /* text-blue-700 */
+    border-radius: 0.5rem;
+}
+
+/* ========================================================== */
+/* 9. [חדש] עיצוב כרטיסיות (מבוסס על הדמו 'אימות MFA.html')   */
+/* ========================================================== */
+
+/* --- קונטיינר ראשי (הותאם למודאל) --- */
+.mfa-cards-container {
+    width: 100%;
+    background-color: var(--color-surface);
+    padding: 8px; 
+}
+
+/* --- פריסת רשת (Grid) לכרטיסיות --- */
+.cards-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px; 
+}
+
+/* --- עיצוב כרטיסייה בודדת --- */
+.mfa-card {
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background-color: var(--color-surface);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    transition: all 0.25s ease-in-out;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* אפקט ריחוף רק על כרטיסיות פעילות */
+.mfa-card:not(.disabled):hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+}
+
+.mfa-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 12px 16px;
+}
+
+.mfa-card .card-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    /* שימוש בצבע רקע בהיר יותר מהפרויקט */
+    background-color: #e7f3fe; 
+    color: var(--color-primary);
+}
+
+.mfa-card .card-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.mfa-card .card-title-group {
+    line-height: 1.3;
+}
+
+.mfa-card .card-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--color-text);
+    margin-bottom: 2px;
+}
+
+.mfa-card .card-source {
+    font-size: 0.8rem;
+    color: #595959; /* צבע אפור בהיר */
+}
+
+.mfa-card .card-body {
+    padding: 0 16px 12px 16px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.mfa-card .card-value {
+    font-size: 1.4rem;
+    color: var(--color-text);
+    font-weight: 500;
+    font-family: "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    text-align: left;
+    direction: ltr;
+    margin-bottom: 8px;
+    padding: 8px 0;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.mfa-card .card-note {
+    font-size: 0.85rem;
+    color: #595959;
+    background-color: var(--color-background);
+    border: 1px solid #e9ecef;
+    padding: 4px 10px;
+    margin-top: 4px;
+    border-radius: 6px;
+    display: inline-block;
+    font-style: normal;
+}
+
+.mfa-card .card-footer {
+    padding: 12px 16px;
+    background-color: #fcfcfc;
+    border-top: 1px solid #f0f0f0;
+}
+
+.mfa-card .card-send-types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 26px;
+    margin-bottom: 12px;
+    justify-content: center;
+}
+
+.mfa-card .card-send-type-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 12px;
+    background-color: #f1f3f5;
+    color: #495057;
+}
+
+.mfa-card .card-send-type-badge svg {
+    width: 12px;
+    height: 12px;
+}
+
+.mfa-card .card-status {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    padding: 10px 8px;
+    border-radius: 8px;
+    background-color: #e7f3fe; /* רקע בהיר */
+    color: var(--color-primary);
+}
+
+/* --- עיצוב כרטיסייה מושבתת (אפור) --- */
+.mfa-card.disabled {
+    background-color: #fcfcfc;
+    cursor: not-allowed;
+    opacity: 0.6;
+    filter: grayscale(80%);
+}
+
+.mfa-card.disabled .card-icon {
+    background-color: #eeeeee;
+    color: #aaaaaa;
+}
+
+.mfa-card.disabled .card-title {
+    color: #aaaaaa;
+}
+
+.mfa-card.disabled .card-status.pending,
+.mfa-card.disabled .card-status.unavailable {
+    background-color: #eeeeee;
+    color: #757575;
+    font-weight: 500;
+}
