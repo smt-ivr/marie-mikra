@@ -1,6 +1,5 @@
 // Two-step verification dialog (Yemot MFASession).
 import { call } from '../core/api.js';
-import { settings } from '../core/settings.js';
 import { openModal, loadingHtml } from '../core/ui.js';
 import { esc } from '../core/util.js';
 
@@ -146,6 +145,6 @@ export function runMfa() {
       m.footer.querySelector('[data-act=back]').onclick = renderMethods;
     }
 
-    if (!settings.token) showError('לא נמצא טוקן.'); else loadMethods();
+    loadMethods();
   });
 }

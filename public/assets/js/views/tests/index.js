@@ -219,7 +219,7 @@ function mountReport(el, ctx, { path, title, isActive }) {
           <span class="sel-bar" hidden><span class="sel-count"></span>
             <button class="btn btn-danger btn-sm" data-cmd="delete-selected"><i class="fa-solid fa-rotate-right"></i> מחיקה לצורך מבחן חוזר</button></span>
           ${answerCols.length ? `<label class="switch"><input type="checkbox" id="toggle-answers"><span></span> פירוט תשובות מלא</label>` : ''}
-          ${editable ? `<button class="btn btn-ghost btn-sm" data-cmd="history"><i class="fa-solid fa-clock-rotate-left"></i> יומן שינויים <span class="count-badge">${gradeHistory.forPath(path).filter((h) => !h.undone).length || ''}</span></button>` : ''}
+          ${editable ? `<button class="btn btn-ghost btn-sm" data-cmd="history"><i class="fa-solid fa-clock-rotate-left"></i> יומן שינויים <span class="count-badge" id="hist-count"></span></button>` : ''}
           <div class="menu">
             <button class="btn btn-ghost btn-sm menu-toggle"><i class="fa-solid fa-download"></i> ייצוא</button>
             <div class="menu-list">
@@ -271,6 +271,8 @@ function mountReport(el, ctx, { path, title, isActive }) {
       return cols;
     };
 
+    const histCount = body.querySelector('#hist-count');
+    if (histCount) gradeHistory.forPath(path).then((list) => { histCount.textContent = list.filter((h) => !h.undone).length || ''; }).catch(() => {});
     const selBar = body.querySelector('.sel-bar');
     const mkTable = () => {
       selBar.hidden = true;

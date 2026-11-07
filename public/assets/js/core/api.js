@@ -1,8 +1,8 @@
-// Client for the Yemot HaMashiach API (call2all). Every request goes straight
-// from the browser to the API, exactly like the old version did.
-import { settings } from './settings.js';
+// Client for the Yemot HaMashiach API, through our own server.
+// The browser never sees the Yemot token: the server (src/server.js) holds it,
+// attaches it to every call and renews it automatically.
 
-export const API_BASE = 'https://www.call2all.co.il/ym/api';
+export const API_BASE = 'srv/yemot';
 
 export class ApiError extends Error {
   constructor(message, data) {
@@ -19,74 +19,75 @@ export function isNotFound(err) {
 
 const READ_ONLY = new Set(['GetTextFile', 'RenderYMGRFile', 'GetIVR2Dir', 'GetCustomerData']);
 
-let renewHandler = null;
-/** auth.js registers a function that tries to get a fresh token (returns true on success). */
-export function onTokenExpired(fn) { renewHandler = fn; }
+// main.js registers handlers for "signed out" and "Yemot needs the password again".
+const handlers = { unauthorized: null, relink: null };
+export function onServerEvent(name, fn) { handlers[name] = fn; }
 
-function looksLikeTokenProblem(data) {
-  const m = `${data?.message || ''} ${data?.responseStatus || ''}`;
-  return /token|IS_NOT_LOGGED|not logged|session/i.test(m) && !/MFA/i.test(m);
-}
-
-function buildUrl(endpoint, params) {
-  const qs = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null) qs.append(k, v);
-  });
-  return `${API_BASE}/${endpoint}?${qs.toString()}`;
+function serverProblem(res, data) {
+  if (res.status === 401 && data?.auth) { handlers.unauthorized && handlers.unauthorized(); return new ApiError('יש להתחבר מחדש.', data); }
+  if (res.status === 409 && data?.relink) { handlers.relink && handlers.relink(data.message); return new ApiError(data.message, data); }
+  return null;
 }
 
 /**
  * Generic call. Throws ApiError when responseStatus is present and not OK.
- * opts.raw: return the Response text instead of JSON.
  * opts.post: send params as form body (POST).
- * opts.noToken: don't attach the stored token.
  */
 export async function call(endpoint, params = {}, opts = {}) {
-  const doRequest = async () => {
-    const p = { ...params };
-    if (!opts.noToken) p.token = settings.token;
-    let res;
-    try {
-      if (opts.post) {
-        const body = new URLSearchParams();
-        Object.entries(p).forEach(([k, v]) => { if (v !== undefined && v !== null) body.append(k, v); });
-        res = await fetch(`${API_BASE}/${endpoint}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body,
-        });
-      } else {
-        // Cache-buster only on read-only endpoints: write endpoints such as
-        // UpdateExtension store every parameter they receive.
-        if (READ_ONLY.has(endpoint)) p._ = Date.now();
-        res = await fetch(buildUrl(endpoint, p), { cache: 'no-store' });
-      }
-    } catch (e) {
-      throw new ApiError('אין תקשורת עם שרת ימות המשיח. בדקו את החיבור לאינטרנט.');
+  const p = {};
+  Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) p[k] = v; });
+  let res;
+  try {
+    if (opts.post) {
+      res = await fetch(`${API_BASE}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-MM-Client': '1' },
+        body: new URLSearchParams(p),
+        credentials: 'same-origin',
+      });
+    } else {
+      if (READ_ONLY.has(endpoint)) p._ = Date.now();
+      res = await fetch(`${API_BASE}/${endpoint}?${new URLSearchParams(p)}`, {
+        headers: { 'X-MM-Client': '1' }, cache: 'no-store', credentials: 'same-origin',
+      });
     }
-    if (!res.ok) throw new ApiError(`שגיאת רשת (${res.status})`);
-    if (opts.raw) return res.text();
-    let data;
-    try {
-      data = await res.json();
-    } catch {
-      throw new ApiError('השרת החזיר תשובה לא תקינה');
-    }
-    return data;
-  };
-
-  let data = await doRequest();
-  if (opts.raw) return data;
-
-  if (data && 'responseStatus' in data && data.responseStatus !== 'OK' && !opts.noRetry && !opts.noToken
-      && looksLikeTokenProblem(data) && renewHandler) {
-    const renewed = await renewHandler();
-    if (renewed) data = await doRequest();
+  } catch {
+    throw new ApiError('אין תקשורת עם השרת. בדקו את החיבור לאינטרנט.');
   }
-
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new ApiError(`השרת החזיר תשובה לא תקינה (${res.status})`);
+  }
+  const problem = serverProblem(res, data);
+  if (problem) throw problem;
+  if (data && data.ok === false && data.message) throw new ApiError(data.message, data);
   if (data && 'responseStatus' in data && data.responseStatus !== 'OK' && !opts.allowError) {
     throw new ApiError(data.message || 'השרת החזיר שגיאה', data);
+  }
+  return data;
+}
+
+/** Calls to our own server (sign-in, history, audit). */
+export async function server(path, { method = 'GET', body } = {}) {
+  let res;
+  try {
+    res = await fetch(`srv/${path}`, {
+      method,
+      headers: { 'X-MM-Client': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store',
+      credentials: 'same-origin',
+    });
+  } catch {
+    throw new ApiError('אין תקשורת עם השרת. בדקו את החיבור לאינטרנט.');
+  }
+  let data;
+  try { data = await res.json(); } catch { throw new ApiError(`השרת החזיר תשובה לא תקינה (${res.status})`); }
+  if (!res.ok || data.ok === false) {
+    if (!path.startsWith('auth/')) serverProblem(res, data);
+    throw new ApiError(data.message || `שגיאת שרת (${res.status})`, data);
   }
   return data;
 }
@@ -160,7 +161,7 @@ export async function updateExtension(path, props = {}) {
 }
 
 export function downloadUrl(path) {
-  return `${API_BASE}/DownloadFile?token=${encodeURIComponent(settings.token)}&path=${encodeURIComponent(path)}`;
+  return `${API_BASE}/DownloadFile?path=${encodeURIComponent(path)}`;
 }
 
 // ---------- System ----------

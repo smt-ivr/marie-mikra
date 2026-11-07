@@ -1,30 +1,60 @@
-// Settings: connection, credentials and file paths.
+// Settings: account, passwords, file paths and the server-side action log.
 import { settings, DEFAULTS } from '../core/settings.js';
-import { login, authState } from '../core/auth.js';
-import { toast, confirmDialog } from '../core/ui.js';
+import { authState, changePassword, relinkYemot, logoutAll } from '../core/auth.js';
+import { server } from '../core/api.js';
+import { toast, confirmDialog, createTable, loadingHtml, errorHtml, emptyHtml, withBusy } from '../core/ui.js';
 import { esc } from '../core/util.js';
+
+const ACTIONS = {
+  login: 'התחברות', 'login-failed': 'ניסיון התחברות שגוי', setup: 'כניסה ראשונה / איפוס סיסמה', 'setup-failed': 'איפוס סיסמה נכשל',
+  'password-changed': 'שינוי סיסמת הממשק', 'yemot-relinked': 'עדכון סיסמת ימות', 'logout-all': 'ניתוק כל המכשירים',
+  UploadTextFile: 'שמירת קובץ', FileAction: 'פעולת קבצים', UpdateExtension: 'עדכון שלוחה', UpdateTask: 'עדכון משימה',
+  RunTzintuk: 'הפעלת צינתוק', TzintukimListManagement: 'ניהול רשימת צינתוקים',
+};
+
+const pw = (name, label, ac) => `<label class="field"><span>${label}</span><span class="pw"><input class="input" type="password" name="${name}" dir="ltr" autocomplete="${ac}" required><button type="button" class="icon-btn pw-eye" aria-label="הצגת סיסמה"><i class="fa-solid fa-eye"></i></button></span></label>`;
 
 export function mount(el, ctx) {
   const st = authState;
-  const statusCls = { ok: 'ok', mfa: 'warn', error: 'bad', none: 'bad', pending: 'muted' }[st.status] || 'muted';
+  const statusCls = { ok: 'ok', mfa: 'warn', relink: 'warn', error: 'bad', none: 'bad', pending: 'muted' }[st.status] || 'muted';
   el.innerHTML = `
-    <div class="page-head"><div><h1>הגדרות</h1><p class="page-sub">ההגדרות נשמרות בדפדפן זה ומשותפות לגרסה החדשה ולגרסה הישנה</p></div></div>
+    <div class="page-head"><div><h1>הגדרות</h1><p class="page-sub">פרטי ההתחברות שמורים בשרת בלבד, ולא בדפדפן</p></div></div>
+
     <section class="panel">
-      <div class="panel-head"><h3><i class="fa-solid fa-plug"></i> חיבור למערכת</h3>
-        <span class="conn conn-${statusCls}"><span class="conn-dot"></span>${esc(st.message || '—')}</span></div>
-      <form class="form form-grid" id="cred" autocomplete="off">
-        <label class="field"><span>מספר מערכת</span><input class="input" name="username" value="${esc(settings.username)}" dir="ltr" inputmode="numeric"></label>
-        <label class="field"><span>סיסמת ניהול</span><span class="pw"><input class="input" type="password" name="password" value="${esc(settings.password)}" dir="ltr"><button type="button" class="icon-btn pw-eye" aria-label="הצגת סיסמה"><i class="fa-solid fa-eye"></i></button></span></label>
-        <label class="field span-2"><span>טוקן (ניתן גם להזין ידנית)</span><span class="pw"><input class="input mono" type="password" name="token" value="${esc(settings.token)}" dir="ltr"><button type="button" class="icon-btn pw-eye" aria-label="הצגת טוקן"><i class="fa-solid fa-eye"></i></button></span></label>
-        <p class="hint span-2">כששמורים מספר מערכת וסיסמה, הטוקן מתחדש אוטומטית כשפג תוקפו.</p>
-        <div class="form-actions span-2">
-          <button type="button" class="btn btn-ghost" data-cmd="gen"><i class="fa-solid fa-key"></i> יצירת טוקן חדש</button>
-          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> שמירה והתחברות מחדש</button>
-        </div>
-      </form>
+      <div class="panel-head"><h3><i class="fa-solid fa-circle-user"></i> חשבון</h3>
+        <span class="conn conn-${statusCls}"><span class="conn-dot"></span>ימות המשיח: ${esc(st.message || '—')}</span></div>
+      <p>מחובר כמערכת <strong dir="ltr">${esc(st.username)}</strong>.</p>
+      ${st.encrypted ? '' : '<div class="alert alert-warning small"><i class="fa-solid fa-triangle-exclamation"></i> סיסמת ימות נשמרת בשרת ללא הצפנה נוספת. להצפנה יש להוסיף סוד בשם <span class="mono">MM_SECRET</span> בהגדרות ה-Worker ב-Cloudflare (ראו README).</div>'}
+      <div class="form-actions" style="justify-content:flex-start">
+        <button class="btn btn-ghost" data-cmd="logout"><i class="fa-solid fa-right-from-bracket"></i> התנתקות</button>
+        <button class="btn btn-ghost" data-cmd="logout-all"><i class="fa-solid fa-users-slash"></i> ניתוק כל המכשירים</button>
+      </div>
     </section>
+
+    <div class="two-col">
+      <section class="panel">
+        <div class="panel-head"><h3><i class="fa-solid fa-lock"></i> שינוי סיסמת הממשק</h3></div>
+        <form class="form" id="pw-form" autocomplete="off">
+          ${pw('current', 'סיסמה נוכחית', 'current-password')}
+          ${pw('next', 'סיסמה חדשה (לפחות 6 תווים)', 'new-password')}
+          ${pw('next2', 'אימות הסיסמה החדשה', 'new-password')}
+          <p class="field-error" hidden></p>
+          <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> שינוי סיסמה</button></div>
+        </form>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h3><i class="fa-solid fa-plug"></i> סיסמת ימות המשיח</h3></div>
+        <p class="muted small">אם שיניתם את סיסמת הניהול בימות המשיח, עדכנו אותה כאן כדי שהשרת ימשיך לחדש את החיבור אוטומטית.</p>
+        <form class="form" id="yemot-form" autocomplete="off">
+          ${pw('yemot', 'סיסמת ניהול חדשה של ימות', 'off')}
+          <p class="field-error" hidden></p>
+          <div class="form-actions"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> עדכון</button></div>
+        </form>
+      </section>
+    </div>
+
     <section class="panel">
-      <div class="panel-head"><h3><i class="fa-solid fa-folder-tree"></i> נתיבי קבצים</h3></div>
+      <div class="panel-head"><h3><i class="fa-solid fa-folder-tree"></i> נתיבי קבצים</h3><span class="muted small">נשמרים בדפדפן זה, משותפים עם הגרסה הישנה</span></div>
       <form class="form" id="paths">
         <label class="field"><span>נתיב המבחן הפעיל</span><input class="input mono" name="active" dir="ltr" value="${esc(settings.activeTestPath)}"></label>
         <label class="field"><span>נתיב דוח נקודות</span><input class="input mono" name="points" dir="ltr" value="${esc(settings.pointsReportPath)}"></label>
@@ -33,10 +63,12 @@ export function mount(el, ctx) {
           <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> שמירת נתיבים</button></div>
       </form>
     </section>
-    <section class="panel danger-zone">
-      <div class="panel-head"><h3><i class="fa-solid fa-triangle-exclamation"></i> איפוס</h3></div>
-      <p>מחיקת כל ההגדרות השמורות בדפדפן זה (כולל פרטי ההתחברות).</p>
-      <button class="btn btn-danger" data-cmd="reset"><i class="fa-solid fa-rotate-left"></i> איפוס הגדרות</button>
+
+    <section class="panel">
+      <div class="panel-head"><h3><i class="fa-solid fa-list-check"></i> יומן פעולות בשרת</h3>
+        <button class="btn btn-ghost btn-sm" data-cmd="audit"><i class="fa-solid fa-rotate"></i> רענון</button></div>
+      <p class="muted small">כל שמירה, העברת קבצים, שינוי שלוחה, הפעלת צינתוק והתחברות נרשמים כאן — מכל מחשב.</p>
+      <div id="audit">${loadingHtml()}</div>
     </section>`;
 
   el.querySelectorAll('.pw-eye').forEach((b) => (b.onclick = () => {
@@ -44,28 +76,29 @@ export function mount(el, ctx) {
     i.type = i.type === 'password' ? 'text' : 'password';
     b.firstElementChild.className = `fa-solid ${i.type === 'password' ? 'fa-eye' : 'fa-eye-slash'}`;
   }));
-  const cred = el.querySelector('#cred');
-  cred.onsubmit = (e) => {
-    e.preventDefault();
-    settings.username = cred.username.value.trim();
-    settings.password = cred.password.value;
-    settings.token = cred.token.value.trim();
-    toast('ההגדרות נשמרו', 'success');
-    ctx.reconnect();
+
+  const formAction = (form, fn) => {
+    const err = form.querySelector('.field-error');
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      err.hidden = true;
+      withBusy(form.querySelector('button[type=submit]'), async () => {
+        try { await fn(form); form.reset(); } catch (er) { err.textContent = er.message; err.hidden = false; }
+      });
+    };
   };
-  el.querySelector('[data-cmd=gen]').onclick = async (e) => {
-    const btn = e.currentTarget;
-    btn.disabled = true;
-    try {
-      const token = await login(cred.username.value.trim(), cred.password.value);
-      cred.token.value = token;
-      settings.token = token;
-      settings.username = cred.username.value.trim();
-      settings.password = cred.password.value;
-      toast('נוצר טוקן חדש ונשמר', 'success');
-      ctx.reconnect();
-    } catch (er) { toast(er.message, 'error'); } finally { btn.disabled = false; }
-  };
+  formAction(el.querySelector('#pw-form'), async (f) => {
+    if (f.next.value !== f.next2.value) throw new Error('הסיסמאות החדשות אינן זהות.');
+    await changePassword(f.current.value, f.next.value);
+    toast('סיסמת הממשק שונתה. מכשירים אחרים נותקו.', 'success');
+    loadAudit();
+  });
+  formAction(el.querySelector('#yemot-form'), async (f) => {
+    await relinkYemot(f.yemot.value);
+    toast('סיסמת ימות עודכנה והחיבור חודש.', 'success');
+    loadAudit();
+  });
+
   const paths = el.querySelector('#paths');
   paths.onsubmit = (e) => {
     e.preventDefault();
@@ -79,10 +112,32 @@ export function mount(el, ctx) {
     paths.points.value = DEFAULTS.points_report_path;
     paths.prev.value = DEFAULTS.previous_tests_path;
   };
-  el.querySelector('[data-cmd=reset]').onclick = async () => {
-    if (!(await confirmDialog({ title: 'איפוס הגדרות', danger: true, message: 'למחוק את כל ההגדרות השמורות בדפדפן זה?', confirmText: 'איפוס' }))) return;
-    settings.reset();
-    location.hash = '#/';
-    location.reload();
+  el.querySelector('[data-cmd=logout]').onclick = () => ctx.logout();
+  el.querySelector('[data-cmd=logout-all]').onclick = async () => {
+    if (!(await confirmDialog({ title: 'ניתוק כל המכשירים', message: 'לנתק את הממשק בכל המחשבים והטלפונים, כולל זה?', confirmText: 'ניתוק', danger: true }))) return;
+    await logoutAll().catch(() => {});
+    ctx.reconnect();
   };
+
+  const auditBox = el.querySelector('#audit');
+  async function loadAudit() {
+    auditBox.innerHTML = loadingHtml();
+    try {
+      const { items } = await server('audit');
+      if (!items.length) { auditBox.innerHTML = emptyHtml('עדיין אין פעולות ביומן.', 'fa-list-check'); return; }
+      createTable(auditBox, {
+        rows: items,
+        columns: [
+          { key: 'at', label: 'מתי', value: (r) => r.at, render: (r) => esc(new Date(r.at).toLocaleString('he-IL')), className: 'nowrap ltr-cell' },
+          { key: 'action', label: 'פעולה', value: (r) => { const [a, ...rest] = r.action.split(' '); return `${ACTIONS[a] || a}${rest.length ? ` ${rest.join(' ')}` : ''}`; } },
+          { key: 'target', label: 'יעד', className: 'ltr-cell' },
+          { key: 'detail', label: 'פרטים', className: 'ltr-cell' },
+          { key: 'ip', label: 'כתובת IP', className: 'mono' },
+        ],
+        sortKey: 'at', sortDir: -1,
+      });
+    } catch (e) { auditBox.innerHTML = errorHtml(e); }
+  }
+  el.querySelector('[data-cmd=audit]').onclick = loadAudit;
+  loadAudit();
 }

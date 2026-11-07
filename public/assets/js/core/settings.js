@@ -1,5 +1,5 @@
-// Settings live in localStorage under the SAME keys the old version uses,
-// so switching between the new and the old version keeps the connection.
+// File paths are kept in this browser under the SAME keys the old version uses.
+// (Sign-in details are no longer stored in the browser: the server holds them.)
 import { storageGet, storageSet } from './util.js';
 
 export const DEFAULTS = {
@@ -29,35 +29,13 @@ export const PATHS = {
 };
 
 export const settings = {
-  get token() { return storageGet('api_token', '') || ''; },
-  set token(v) { storageSet('api_token', v || null); },
-  get username() { return storageGet('username', '') || ''; },
-  set username(v) { storageSet('username', v || null); },
-  get password() { return storageGet('password', '') || ''; },
-  set password(v) { storageSet('password', v || null); },
   get activeTestPath() { return storageGet('active_test_path') || DEFAULTS.active_test_path; },
   set activeTestPath(v) { storageSet('active_test_path', v || null); },
   get pointsReportPath() { return storageGet('points_report_path') || DEFAULTS.points_report_path; },
   set pointsReportPath(v) { storageSet('points_report_path', v || null); },
   get previousTestsPath() { return storageGet('previous_tests_path') || DEFAULTS.previous_tests_path; },
   set previousTestsPath(v) { storageSet('previous_tests_path', v || null); },
-
-  reset() {
-    ['api_token', 'username', 'password', 'active_test_path', 'points_report_path', 'previous_tests_path']
-      .forEach((k) => storageSet(k, null));
+  resetPaths() {
+    ['active_test_path', 'points_report_path', 'previous_tests_path'].forEach((k) => storageSet(k, null));
   },
 };
-
-/** Same behaviour as the old version: ?token= / ?username= / ?password= in the URL
- *  are saved and then removed from the address bar. Returns a message or null. */
-export function absorbUrlParams() {
-  const params = new URLSearchParams(location.search);
-  const saved = [];
-  const token = params.get('Token') || params.get('token');
-  if (token) { settings.token = token; saved.push('טוקן'); }
-  if (params.get('username')) { settings.username = params.get('username'); saved.push('מספר מערכת'); }
-  if (params.get('password')) { settings.password = params.get('password'); saved.push('סיסמה'); }
-  if (!saved.length) return null;
-  history.replaceState(null, '', location.pathname + location.hash);
-  return `ההגדרות הבאות נשמרו: ${saved.join(', ')}`;
-}

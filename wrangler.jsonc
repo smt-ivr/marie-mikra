@@ -1,6 +1,6 @@
 // Cloudflare deployment config: static site in ./public
 // (new version at "/", the original version unchanged at "/legacy/").
-// src/worker.js also serves it under smti.uk/marie-mikra (Worker route).
+// src/worker.js serves it under smti.uk/marie-mikra and runs the server of the new interface.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "marie-mikra",
@@ -10,5 +10,13 @@
     "directory": "./public",
     "binding": "ASSETS",
     "run_worker_first": true
-  }
+  },
+  // Server data: new mm_* tables inside the existing "tfila" database (nothing else there is touched).
+  "d1_databases": [
+    {
+      "binding": "MM_DB",
+      "database_name": "tfila",
+      "database_id": "6e745a7f-8aae-46f9-8de2-b6b1c8d8db97"
+    }
+  ]
 }
