@@ -3,6 +3,7 @@ import { call } from '../core/api.js';
 import { PATHS } from '../core/settings.js';
 import { createTable, loadingHtml, errorHtml, emptyHtml, toast, openModal, confirmDialog } from '../core/ui.js';
 import { esc } from '../core/util.js';
+import { can } from '../core/auth.js';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 const STATUS = { PENDING: 'ממתין', RUNNING: 'בריצה', DONE: 'הסתיים', ERROR: 'שגיאה', NOT_ACTIVE: 'לא פעיל' };
@@ -62,10 +63,10 @@ async function tasksView(box) {
       { key: 'time', label: 'שעה', value: (t) => `${pad(t.hour)}:${pad(t.minute)}`, className: 'ltr-cell' },
       { key: 'days', label: 'ימים', value: (t) => daysText(t.days_of_week, t.ifAnyDay) },
       { key: 'nextRun', label: 'ריצה הבאה', value: (t) => t.nextRun || '—', className: 'ltr-cell nowrap' },
-      { key: 'active', label: 'פעילה', sortable: false, render: (t) => `<label class="switch"><input type="checkbox" class="t-active" ${t.active ? 'checked' : ''}><span></span></label>` },
+      { key: 'active', label: 'פעילה', sortable: false, render: (t) => `<label class="switch"><input type="checkbox" class="t-active" ${t.active ? 'checked' : ''} ${can('tzintuk_edit') ? '' : 'disabled'}><span></span></label>` },
     ],
     actions: () => `<button class="icon-btn" data-action="details" title="פרטים"><i class="fa-solid fa-eye"></i></button>
-      <button class="icon-btn" data-action="edit" title="עריכה"><i class="fa-solid fa-pen"></i></button>
+      ${can('tzintuk_edit') ? '<button class="icon-btn" data-action="edit" title="עריכה"><i class="fa-solid fa-pen"></i></button>' : ''}
       <button class="icon-btn" data-action="log" title="יומן ריצה"><i class="fa-solid fa-clock-rotate-left"></i></button>`,
     onAction: (a, t) => { if (a === 'details') details(t); if (a === 'edit') edit(t, () => tasksView(box)); if (a === 'log') log(t); },
   });
@@ -194,7 +195,7 @@ async function listView(box) {
         <div class="stat"><span class="stat-l">סה"כ ברשימה</span><span class="stat-v">${esc(list.countSubscribers || 0)}</span></div>
         <div class="stat"><span class="stat-l">פעילים</span><span class="stat-v ok">${esc(list.countsActive || 0)}</span></div>
         <div class="stat"><span class="stat-l">חסומים</span><span class="stat-v bad">${esc(list.countsBlocked || 0)}</span></div>
-        <div class="stat stat-action"><button class="btn btn-primary" data-cmd="run"><i class="fa-solid fa-bell"></i> הפעלת צינתוק עכשיו</button></div>
+        <div class="stat stat-action" ${can('tzintuk_edit') ? '' : 'hidden'}><button class="btn btn-primary" data-cmd="run"><i class="fa-solid fa-bell"></i> הפעלת צינתוק עכשיו</button></div>
       </section>
       <div class="two-col">
         <section class="panel"><div class="panel-head"><h3><i class="fa-solid fa-users"></i> מספרים ברשימה</h3></div><div id="tz-subs"></div></section>

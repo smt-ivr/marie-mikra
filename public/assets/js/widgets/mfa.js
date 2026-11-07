@@ -56,7 +56,7 @@ export function runMfa() {
         const usable = g.status === 'ACTIVE' && sendTypes.length > 0;
         const [label, icon] = TYPE[g.type] || ['אימות', 'fa-user-shield'];
         const sources = [...new Set(g.methods.map((x) => NIKE[x.NIKE] || x.NIKE || 'אימות כללי'))].join(' · ');
-        const status = g.status === 'PENDING' ? 'ממתין לאישור באתר ימות' : usable ? 'לחצו לבחירה' : 'לא ניתן לשלוח אימות';
+        const status = g.status === 'PENDING' ? 'ממתין לאישור' : usable ? 'לחצו לבחירה' : 'לא ניתן לשלוח אימות';
         return `<button class="mfa-card" data-key="${esc(key)}" ${usable ? '' : 'disabled'}>
           <i class="fa-solid ${icon} mfa-card-icon"></i>
           <span class="mfa-card-main"><strong>${esc(label)}</strong><span dir="ltr">${esc(g.value)}</span><small>${esc(sources)}</small></span>

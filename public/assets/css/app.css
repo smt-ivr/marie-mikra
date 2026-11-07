@@ -471,6 +471,11 @@ select.input { cursor: pointer; }
 .login-card .brand { justify-content: center; margin-bottom: .4rem; }
 .login-card .brand-logo { width: 52px; height: 52px; }
 .login-card .brand strong { font-size: 1.35rem; }
+.perm-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.perm-table th, .perm-table td { padding: .4rem .5rem; border-bottom: 1px solid var(--border); text-align: center; }
+.perm-table tbody th { text-align: start; font-weight: 600; }
+.perm-table thead th { color: var(--text-2); font-size: .8rem; }
+.perm-table input { width: 17px; height: 17px; accent-color: var(--primary); cursor: pointer; }
 .login-title { font-size: 1.15rem; font-weight: 800; text-align: center; }
 .who { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem; border-radius: 9px; background: var(--surface-2); color: var(--text-2); font-size: .88rem; }
 .who > i { color: var(--primary); font-size: 1.1rem; }

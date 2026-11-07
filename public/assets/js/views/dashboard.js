@@ -7,6 +7,7 @@ import { getLockState } from './tests/test-actions.js';
 import { parseTimes, timeStatus } from './times.js';
 import { parseStudentsMap, parsePoints } from './points.js';
 import { liveCalls } from '../widgets/calls.js';
+import { can, isMaster } from '../core/auth.js';
 
 const card = (id, href, icon, title) => `
   <a class="dash-card" id="${id}" href="${href}">
@@ -20,18 +21,18 @@ export function mount(el) {
   el.innerHTML = `
     <div class="page-head"><div><h1>${greet}</h1><p class="page-sub">סקירה כללית של המערכת</p></div></div>
     <div class="dash-grid">
-      ${card('d-test', '#/tests', 'fa-clipboard-check', 'המבחן הפעיל')}
-      ${card('d-lock', '#/tests', 'fa-lock', 'סטטוס שלוחת המבחן')}
-      ${card('d-time', '#/times', 'fa-clock', 'זמני כניסה')}
-      ${card('d-points', '#/points', 'fa-star', 'נקודות')}
-      ${card('d-students', '#/students', 'fa-users', 'תלמידים')}
-      ${card('d-calls', '#/tests', 'fa-phone-volume', 'שיחות פעילות')}
-      ${card('d-sys', '#/settings', 'fa-server', 'פרטי מערכת')}
+      ${can('tests_view') ? card('d-test', '#/tests', 'fa-clipboard-check', 'המבחן הפעיל') : ''}
+      ${can('tests_view') ? card('d-lock', '#/tests', 'fa-lock', 'סטטוס שלוחת המבחן') : ''}
+      ${can('times_view') ? card('d-time', '#/times', 'fa-clock', 'זמני כניסה') : ''}
+      ${can('points_view') ? card('d-points', '#/points', 'fa-star', 'נקודות') : ''}
+      ${can('students_view') ? card('d-students', '#/students', 'fa-users', 'תלמידים') : ''}
+      ${card('d-calls', '#/', 'fa-phone-volume', 'שיחות פעילות')}
+      ${card('d-sys', isMaster() ? '#/admin' : '#/', 'fa-server', 'פרטי מערכת')}
     </div>`;
   const set = (id, html) => { const b = el.querySelector(`#${id} .dash-card-body`); if (b) b.innerHTML = html; };
   const fail = (id, e) => set(id, `<span class="muted small"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e?.message || 'לא זמין')}</span>`);
 
-  api.getText(settings.activeTestPath).then((txt) => {
+  if (can('tests_view')) api.getText(settings.activeTestPath).then((txt) => {
     if (txt === null) { set('d-test', '<span class="dash-big">—</span><span class="muted">אין כעת מבחן פעיל</span>'); return; }
     const objs = reportLines(txt).map(lineToObject);
     const scores = objs.map((o) => toNumber(o[SCORE_KEY])).filter(Number.isFinite);
@@ -39,17 +40,17 @@ export function mount(el) {
     set('d-test', `<span class="dash-big">${objs.length}</span><span class="muted">נבחנים${scores.length ? ` · ממוצע <strong>${fmtNum(avg, 1)}</strong>` : ''}</span>`);
   }).catch((e) => fail('d-test', e));
 
-  getLockState().then((locked) => set('d-lock', locked
+  if (can('tests_view')) getLockState().then((locked) => set('d-lock', locked
     ? '<span class="dash-status bad"><i class="fa-solid fa-lock"></i> חסום</span><span class="muted">תלמידים לא יכולים להיבחן</span>'
     : '<span class="dash-status ok"><i class="fa-solid fa-lock-open"></i> פתוח</span><span class="muted">ניתן להיבחן</span>')).catch((e) => fail('d-lock', e));
 
-  api.getText(PATHS.timeIni).then((txt) => {
+  if (can('times_view')) api.getText(PATHS.timeIni).then((txt) => {
     if (txt === null) { set('d-time', '<span class="muted">לא הוגדרו זמנים</span>'); return; }
     const st = timeStatus(parseTimes(txt));
     set('d-time', `<span class="dash-status ${st.open ? 'ok' : 'bad'}"><i class="fa-solid ${st.open ? 'fa-door-open' : 'fa-door-closed'}"></i> ${st.open ? 'פתוח עכשיו' : 'סגור עכשיו'}</span><span class="muted small">${esc(st.text)}</span>`);
   }).catch((e) => fail('d-time', e));
 
-  Promise.all([api.getText(PATHS.studentsIni), api.getText(PATHS.pointsIni)]).then(([studentsTxt, pointsTxt]) => {
+  Promise.all([can('students_view') || can('points_view') ? api.getText(PATHS.studentsIni).catch(() => null) : null, can('points_view') ? api.getText(PATHS.pointsIni) : null]).then(([studentsTxt, pointsTxt]) => {
     const smap = parseStudentsMap(studentsTxt);
     const all = String(studentsTxt || '').split(/\r?\n/).slice(1).filter((l) => l.trim() && l.split(',')[0]);
     const active = all.filter((l) => (l.split(',')[1] || '1') === '1').length;

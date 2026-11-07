@@ -1,50 +1,41 @@
 // Sign-in to the new interface (handled by our server, see src/server.js).
 import { server } from './api.js';
-import { storageGet, storageSet } from './util.js';
 
 export const authState = {
+  configured: true,
   loggedIn: false,
-  username: '',
-  status: 'pending', // pending | ok | mfa | relink | error | none
-  message: '',
-  encrypted: false,
+  principal: null,   // { label, master, perms[], via }
+  paths: null,
+  connection: null,  // { status: ok|mfa|expired|error, message }
+  error: '',
 };
 
-export const lastUsername = {
-  get: () => storageGet('mm_last_user', '') || '',
-  set: (u) => storageSet('mm_last_user', u || null),
-};
+/** Does the signed-in user have this permission? (edit implies view) */
+export function can(perm) {
+  const p = authState.principal;
+  if (!p) return false;
+  if (p.master) return true;
+  if (p.perms.includes(perm)) return true;
+  return perm.endsWith('_view') && p.perms.includes(perm.replace('_view', '_edit'));
+}
+export const isMaster = () => !!authState.principal?.master;
 
-/** Ask the server who we are and how the Yemot connection looks. */
 export async function refreshStatus() {
-  authState.status = 'pending';
+  authState.error = '';
   try {
     const r = await server('auth/status');
+    authState.configured = r.configured !== false;
     authState.loggedIn = !!r.loggedIn;
-    authState.username = r.username || '';
-    authState.encrypted = !!r.encrypted;
-    if (!r.loggedIn) { authState.status = 'none'; authState.message = ''; }
-    else { authState.status = r.yemot?.status || 'error'; authState.message = r.yemot?.message || ''; }
+    authState.principal = r.principal || null;
+    authState.paths = r.paths || null;
+    authState.connection = r.connection || null;
   } catch (e) {
     authState.loggedIn = false;
-    authState.status = 'error';
-    authState.message = e.message;
+    authState.error = e.message;
   }
   return authState;
 }
 
-export async function login(username, password) {
-  await server('auth/login', { method: 'POST', body: { username, password } });
-  lastUsername.set(username);
-}
-
-/** First sign-in / forgot password: proven with the Yemot password. */
-export async function setup(username, yemotPassword, newPassword) {
-  await server('auth/setup', { method: 'POST', body: { username, yemotPassword, newPassword } });
-  lastUsername.set(username);
-}
-
+export const setup = (token, password) => server('auth/setup', { method: 'POST', body: { token, password } });
+export const login = (password) => server('auth/login', { method: 'POST', body: { password } });
 export const logout = () => server('auth/logout', { method: 'POST', body: {} });
-export const logoutAll = () => server('auth/logout-all', { method: 'POST', body: {} });
-export const changePassword = (current, next) => server('auth/password', { method: 'POST', body: { current, next } });
-export const relinkYemot = (yemotPassword) => server('auth/yemot', { method: 'POST', body: { yemotPassword } });
