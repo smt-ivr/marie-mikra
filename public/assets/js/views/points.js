@@ -3,6 +3,7 @@ import * as api from '../core/api.js';
 import { PATHS } from '../core/settings.js';
 import { createTable, searchBox, loadingHtml, errorHtml, emptyHtml, toast, openModal, confirmDialog, promptDialog } from '../core/ui.js';
 import { esc, debounce, exportCsv, fmtNum, splitKeep, joinKeep } from '../core/util.js';
+import { can } from '../core/auth.js';
 
 export function mount(el, ctx) {
   if (ctx.sub === 'archive') return mountArchive(el);
@@ -50,7 +51,7 @@ function mountReport(el, { folder, title }) {
         <h1>${esc(title)}</h1><p class="page-sub" id="pts-meta"></p></div>
       <div class="page-actions">
         ${isActive ? `<a class="btn btn-ghost" href="#/points/archive"><i class="fa-solid fa-clock-rotate-left"></i> דוחות קודמים</a>
-          <button class="btn btn-ghost" data-cmd="archive"><i class="fa-solid fa-box-archive"></i> ארכוב ואיפוס</button>` : ''}
+          ${can('points_edit') ? '<button class="btn btn-ghost" data-cmd="archive"><i class="fa-solid fa-box-archive"></i> ארכוב ואיפוס</button>' : ''}` : ''}
         <button class="btn btn-ghost icon-only" data-cmd="refresh" title="רענון"><i class="fa-solid fa-rotate"></i></button>
       </div>
     </div>
@@ -91,7 +92,7 @@ function mountReport(el, { folder, title }) {
           { key: 'school', label: 'כיתה' },
           { key: 'points', label: 'סה"כ נקודות', render: (r) => `<span class="points-val"><i class="fa-solid fa-star"></i> ${fmtNum(r.points)}</span>` },
         ],
-        actions: isActive ? () => '<button class="btn btn-sm btn-ghost" data-action="edit"><i class="fa-solid fa-sliders"></i> עדכון נקודות</button>' : null,
+        actions: isActive && can('points_edit') ? () => '<button class="btn btn-sm btn-ghost" data-action="edit"><i class="fa-solid fa-sliders"></i> עדכון נקודות</button>' : null,
         onAction: (a, r) => { if (a === 'edit') editPoints(r, iniPath, load); },
       });
       const s = body.querySelector('.search input');

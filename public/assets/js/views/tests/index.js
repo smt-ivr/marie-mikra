@@ -8,6 +8,7 @@ import {
   isAnswerValue, isCorrectValue,
 } from '../../core/ymgr.js';
 import { openGradeEditor, openHistory, gradeHistory } from './grade-editor.js';
+import { can } from '../../core/auth.js';
 import { getLockState, toggleLockDialog, showQuestions, closeActiveTest, importQuestions, deleteRecords } from './test-actions.js';
 
 export const REPORT_FILE = 'ExaminationAmericanLogOK.ymgr';
@@ -140,8 +141,8 @@ function mountReport(el, ctx, { path, title, isActive }) {
             <button class="btn btn-ghost menu-toggle"><i class="fa-solid fa-ellipsis"></i> פעולות מבחן</button>
             <div class="menu-list">
               <button data-cmd="questions"><i class="fa-solid fa-list-ol"></i> הצגת שאלות המבחן</button>
-              <button data-cmd="import"><i class="fa-solid fa-file-import"></i> ייבוא שאלות ממבחן קודם</button>
-              <button data-cmd="close" class="danger"><i class="fa-solid fa-box-archive"></i> סגירת מבחן והעברה לארכיון</button>
+              ${can('tests_edit') ? `<button data-cmd="import"><i class="fa-solid fa-file-import"></i> ייבוא שאלות ממבחן קודם</button>
+              <button data-cmd="close" class="danger"><i class="fa-solid fa-box-archive"></i> סגירת מבחן והעברה לארכיון</button>` : ''}
             </div>
           </div>
           <a class="btn btn-ghost" href="#/tests/archive"><i class="fa-solid fa-clock-rotate-left"></i> מבחנים קודמים</a>`
@@ -173,8 +174,8 @@ function mountReport(el, ctx, { path, title, isActive }) {
       pill.hidden = false;
       pill.className = `lock-pill ${locked ? 'locked' : 'open'}`;
       pill.innerHTML = `<i class="fa-solid ${locked ? 'fa-lock' : 'fa-lock-open'}"></i> ${locked ? 'המבחן חסום' : 'המבחן פתוח'}
-        <button class="pill-btn" title="שינוי סטטוס ידני">${locked ? 'פתיחה' : 'חסימה'}</button>`;
-      pill.querySelector('.pill-btn').onclick = async () => {
+        ${can('tests_edit') ? `<button class="pill-btn" title="שינוי סטטוס ידני">${locked ? 'פתיחה' : 'חסימה'}</button>` : ''}`;
+      if (pill.querySelector('.pill-btn')) pill.querySelector('.pill-btn').onclick = async () => {
         try { if (await toggleLockDialog(locked)) refreshLock(); } catch (e) { toast(e.message, 'error'); }
       };
     } catch {
@@ -190,7 +191,7 @@ function mountReport(el, ctx, { path, title, isActive }) {
     }
     const { records, headers, gradeCol, nameCol, answerCols } = data;
     const st = statsOf(records);
-    const editable = records.some((r) => r.line);
+    const editable = can('tests_edit') && records.some((r) => r.line);
     meta.innerHTML = `${records.length} נבחנים${data.mtime ? ` · עודכן ${esc(data.mtime)}` : ''} · <span dir="ltr" class="mono">${esc(path)}</span>`;
 
     const qStats = answerCols.map((h) => {
@@ -228,7 +229,7 @@ function mountReport(el, ctx, { path, title, isActive }) {
             </div>
           </div>
         </div>
-        ${!editable && data.records.length ? '<div class="alert alert-warning small">לא ניתן היה לקרוא את קובץ הדוח הגולמי, ולכן עריכת ציונים אינה זמינה בדוח זה.</div>' : ''}
+        ${can('tests_edit') && !editable && data.records.length ? '<div class="alert alert-warning small">לא ניתן היה לקרוא את קובץ הדוח הגולמי, ולכן עריכת ציונים אינה זמינה בדוח זה.</div>' : ''}
         <div id="rep-table"></div>
       </section>`;
 
@@ -246,7 +247,7 @@ function mountReport(el, ctx, { path, title, isActive }) {
           className: 'col-grade',
           render: (r) => {
             const shown = gradeCol ? r.row[gradeCol] : r.obj[SCORE_KEY];
-            return `<span class="grade ${gradeClass(r.score)}">${esc(shown ?? '')}</span>${r.line ? '<button class="icon-btn edit-grade" data-action="grade" title="עריכת ציון"><i class="fa-solid fa-pen"></i></button>' : ''}`;
+            return `<span class="grade ${gradeClass(r.score)}">${esc(shown ?? '')}</span>${r.line && editable ? '<button class="icon-btn edit-grade" data-action="grade" title="עריכת ציון"><i class="fa-solid fa-pen"></i></button>' : ''}`;
           },
         });
       }

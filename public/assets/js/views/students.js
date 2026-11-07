@@ -3,6 +3,7 @@ import * as api from '../core/api.js';
 import { PATHS } from '../core/settings.js';
 import { createTable, searchBox, loadingHtml, errorHtml, emptyHtml, toast, openModal, confirmDialog } from '../core/ui.js';
 import { esc, debounce, exportCsv, eolOf } from '../core/util.js';
+import { can } from '../core/auth.js';
 
 const DEFAULT_HEADERS = ['קוד', 'סטטוס', 'שם', 'משפחה', 'הערה', 'כיתה'];
 
@@ -39,7 +40,7 @@ export function mount(el) {
     <div class="page-head">
       <div><h1>ניהול תלמידים</h1><p class="page-sub" id="st-meta"></p></div>
       <div class="page-actions">
-        <button class="btn btn-primary" data-cmd="add"><i class="fa-solid fa-user-plus"></i> תלמיד חדש</button>
+        ${can('students_edit') ? '<button class="btn btn-primary" data-cmd="add"><i class="fa-solid fa-user-plus"></i> תלמיד חדש</button>' : ''}
         <button class="btn btn-ghost icon-only" data-cmd="refresh" title="רענון"><i class="fa-solid fa-rotate"></i></button>
       </div>
     </div>
@@ -80,7 +81,7 @@ export function mount(el) {
       </section>`;
     const selBar = body.querySelector('.sel-bar');
     table = createTable(body.querySelector('#st-table'), {
-      rows: model.students, rowId: (s) => s.id, selectable: true,
+      rows: model.students, rowId: (s) => s.id, selectable: can('students_edit'),
       columns: [
         { key: 'id', label: h[0] || 'קוד', className: 'mono' },
         { key: 'firstName', label: h[2] || 'שם', render: (s) => `<strong>${esc(s.firstName)}</strong>` },
@@ -90,7 +91,7 @@ export function mount(el) {
         { key: 'status', label: 'סטטוס', render: (s) => (s.status === '1' ? '<span class="badge badge-ok">פעיל</span>' : '<span class="badge badge-bad">מושבת</span>') },
       ],
       searchText: (s) => `${s.id} ${s.firstName} ${s.lastName} ${s.school} ${s.note}`,
-      actions: (s) => `<button class="icon-btn" data-action="edit" title="עריכה"><i class="fa-solid fa-pen"></i></button>
+      actions: !can('students_edit') ? null : (s) => `<button class="icon-btn" data-action="edit" title="עריכה"><i class="fa-solid fa-pen"></i></button>
         <button class="icon-btn" data-action="toggle" title="${s.status === '1' ? 'השבתה' : 'הפעלה'}"><i class="fa-solid ${s.status === '1' ? 'fa-user-slash' : 'fa-user-check'}"></i></button>
         <button class="icon-btn danger" data-action="delete" title="מחיקה"><i class="fa-solid fa-trash"></i></button>`,
       onSelect: (sel) => { selBar.hidden = !sel.length; selBar.querySelector('.sel-count').textContent = `${sel.length} נבחרו`; },

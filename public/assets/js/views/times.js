@@ -4,6 +4,7 @@ import * as api from '../core/api.js';
 import { PATHS } from '../core/settings.js';
 import { loadingHtml, errorHtml, emptyHtml, toast, confirmDialog, withBusy } from '../core/ui.js';
 import { esc } from '../core/util.js';
+import { can } from '../core/auth.js';
 
 const DAYS = [['sun', 'ראשון'], ['mon', 'שני'], ['tue', 'שלישי'], ['wed', 'רביעי'], ['thu', 'חמישי'], ['fri', 'שישי'], ['sat', 'שבת']];
 const DAY_IDX = Object.fromEntries(DAYS.map(([k], i) => [k, i]));
@@ -96,7 +97,7 @@ export function mount(el) {
       <label class="switch"><input type="checkbox" class="r-on" ${f.enabled ? 'checked' : ''}><span></span></label>
       <span class="rule-txt">מיום</span>${daySel('r-sd', sd)}<span class="rule-txt">בשעה</span><input type="time" class="input input-sm r-st" value="${st}">
       <span class="rule-txt">עד יום</span>${daySel('r-ed', ed)}<span class="rule-txt">בשעה</span><input type="time" class="input input-sm r-et" value="${et}">
-      <button class="icon-btn danger r-del" title="${f.deleted ? 'ביטול מחיקה' : 'מחיקת כלל'}"><i class="fa-solid ${f.deleted ? 'fa-rotate-left' : 'fa-trash'}"></i></button>
+      <button class="icon-btn danger r-del" ${can('times_edit') ? '' : 'hidden'} title="${f.deleted ? 'ביטול מחיקה' : 'מחיקת כלל'}"><i class="fa-solid ${f.deleted ? 'fa-rotate-left' : 'fa-trash'}"></i></button>
     </div>`;
   }
 
@@ -122,7 +123,7 @@ export function mount(el) {
         <div class="status-main"><i class="fa-solid ${banner[0]}"></i><div><h3>${banner[1]}</h3><p>${banner[2]}</p></div></div>
         <p class="status-now"><i class="fa-solid ${st.open ? 'fa-circle-check' : 'fa-circle-xmark'}"></i> ${esc(st.text)}</p>
         ${timeline()}
-        <div class="seg">
+        <div class="seg" ${can('times_edit') ? '' : 'hidden'}>
           <button class="btn ${model.mode === 'filter' ? 'btn-primary' : 'btn-ghost'}" data-mode="filter"><i class="fa-solid fa-filter"></i> לפי שעות</button>
           <button class="btn ${model.mode === 'open' ? 'btn-success' : 'btn-ghost'}" data-mode="open"><i class="fa-solid fa-door-open"></i> פתוח לכולם</button>
           <button class="btn ${model.mode === 'closed' ? 'btn-danger' : 'btn-ghost'}" data-mode="closed"><i class="fa-solid fa-door-closed"></i> סגור לכולם</button>
@@ -130,10 +131,10 @@ export function mount(el) {
       </section>
       <section class="panel">
         <div class="panel-head"><h3><i class="fa-solid fa-list-check"></i> כללי סינון שבועיים</h3>
-          <button class="btn btn-ghost btn-sm" data-cmd="add-rule"><i class="fa-solid fa-plus"></i> כלל חדש</button></div>
+          <button class="btn btn-ghost btn-sm" data-cmd="add-rule" ${can('times_edit') ? '' : 'hidden'}><i class="fa-solid fa-plus"></i> כלל חדש</button></div>
         <div class="rules">${model.filters.map(ruleRow).join('') || '<p class="muted">אין כללים מוגדרים.</p>'}</div>
         <div class="panel-foot"><span class="muted small dirty-note" hidden>יש שינויים שלא נשמרו</span>
-          <button class="btn btn-primary" data-cmd="save"><i class="fa-solid fa-floppy-disk"></i> שמירת הכללים</button></div>
+          <button class="btn btn-primary" data-cmd="save" ${can('times_edit') ? '' : 'hidden'}><i class="fa-solid fa-floppy-disk"></i> שמירת הכללים</button></div>
       </section>`;
   }
 
