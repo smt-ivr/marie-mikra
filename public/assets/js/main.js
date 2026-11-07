@@ -1,7 +1,6 @@
 // App shell, login screen and hash router.
-import { settings, absorbUrlParams } from './core/settings.js';
-import { connect, login, authState } from './core/auth.js';
-import { getCustomerData } from './core/api.js';
+import { authState, refreshStatus, login, setup, logout, relinkYemot, lastUsername } from './core/auth.js';
+import { getCustomerData, onServerEvent } from './core/api.js';
 import { toast, loadingHtml, closeAllModals } from './core/ui.js';
 import { esc, storageGet, storageSet, fmtNum } from './core/util.js';
 import { runMfa } from './widgets/mfa.js';
@@ -18,6 +17,12 @@ import * as logs from './views/logs.js';
 import * as settingsView from './views/settings.js';
 
 const LEGACY_URL = 'legacy/';
+const LOGO_URL = 'https://smti.uk/smt.png';
+// If the logo can't load, fall back to the built-in icon.
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (img?.classList?.contains('brand-logo') && !img.dataset.fallback) { img.dataset.fallback = '1'; img.src = 'assets/img/logo.svg'; }
+}, true);
 
 const NAV = [
   { route: '', label: 'סקירה כללית', icon: 'fa-gauge-high', mod: dashboard },
@@ -51,7 +56,7 @@ function toggleTheme() {
 
 const legacyButton = (cls = '') => `<a class="btn btn-legacy ${cls}" href="${LEGACY_URL}" title="מעבר לממשק הקודם, ללא שינויים"><i class="fa-solid fa-clock-rotate-left"></i><span>לגרסה הישנה</span></a>`;
 
-const brand = `<div class="brand"><img src="assets/img/logo.svg" alt="" class="brand-logo"><div><strong>מארי מקרא</strong><span>ממשק ניהול</span></div></div>`;
+const brand = `<div class="brand"><img src="${LOGO_URL}" alt="S.M.T" class="brand-logo"><div><strong>מארי מקרא</strong><span>ממשק ניהול</span></div></div>`;
 
 // ---------------- Screens ----------------
 
@@ -59,39 +64,33 @@ function renderConnecting(text = 'מתחבר למערכת...') {
   app.innerHTML = `<div class="center-screen">${brand}${loadingHtml(text)}</div>`;
 }
 
-function renderLogin(message = '') {
-  const isMfa = authState.status === 'mfa';
+const credit = '<p class="credit">פיתוח מיוחד עבור ת"ת בת עין צפת · פותח בסייעתא דישמיא ע"י שימי טרייטל</p>';
+
+function loginScreen(inner) {
   app.innerHTML = `
     <div class="center-screen">
       <div class="login-card">
         ${brand}
-        ${message ? `<div class="alert ${isMfa ? 'alert-warning' : 'alert-danger'} small">${esc(message)}</div>` : ''}
-        ${isMfa ? `
-          <p>החיבור הצליח, אך המערכת דורשת אימות דו-שלבי.</p>
-          <button class="btn btn-primary btn-block" id="do-mfa"><i class="fa-solid fa-shield-halved"></i> ביצוע אימות</button>
-          <button class="btn btn-ghost btn-block" id="relogin">התחברות עם פרטים אחרים</button>`
-        : `
-          <form class="form" id="login-form" autocomplete="on">
-            <label class="field"><span>מספר מערכת</span><input class="input" name="username" dir="ltr" inputmode="numeric" autocomplete="username" value="${esc(settings.username)}" required></label>
-            <label class="field"><span>סיסמת ניהול</span><input class="input" name="password" type="password" dir="ltr" autocomplete="current-password" required></label>
-            <label class="check"><input type="checkbox" name="remember" checked> זכור אותי במחשב זה (חידוש חיבור אוטומטי)</label>
-            <p class="field-error" hidden></p>
-            <button class="btn btn-primary btn-block" type="submit"><i class="fa-solid fa-right-to-bracket"></i> התחברות</button>
-          </form>
-          <details class="token-login"><summary>התחברות עם טוקן</summary>
-            <form class="form" id="token-form"><label class="field"><span>טוקן</span><input class="input mono" name="token" dir="ltr"></label>
-              <button class="btn btn-ghost btn-block" type="submit">התחברות עם טוקן</button></form></details>`}
+        ${inner}
         <div class="login-foot">${legacyButton('btn-block')}</div>
       </div>
-      <p class="credit">פיתוח מיוחד עבור ת"ת בת עין צפת · פותח בסייעתא דישמיא ע"י שימי טרייטל</p>
+      ${credit}
     </div>`;
+}
 
-  if (isMfa) {
-    app.querySelector('#do-mfa').onclick = async () => { if (await runMfa()) boot(); };
-    app.querySelector('#relogin').onclick = () => { authState.status = 'none'; renderLogin(); };
-    return;
-  }
-  const form = app.querySelector('#login-form');
+const pwField = (name, label, autocomplete) => `<label class="field"><span>${label}</span>
+  <span class="pw"><input class="input" name="${name}" type="password" dir="ltr" autocomplete="${autocomplete}" required>
+  <button type="button" class="icon-btn pw-eye" aria-label="הצגת סיסמה"><i class="fa-solid fa-eye"></i></button></span></label>`;
+
+function wireEyes(root) {
+  root.querySelectorAll('.pw-eye').forEach((b) => (b.onclick = () => {
+    const i = b.previousElementSibling;
+    i.type = i.type === 'password' ? 'text' : 'password';
+    b.firstElementChild.className = `fa-solid ${i.type === 'password' ? 'fa-eye' : 'fa-eye-slash'}`;
+  }));
+}
+
+function bindForm(form, action) {
   const err = form.querySelector('.field-error');
   form.onsubmit = async (e) => {
     e.preventDefault();
@@ -99,26 +98,84 @@ function renderLogin(message = '') {
     btn.disabled = true;
     err.hidden = true;
     try {
-      const u = form.username.value.trim();
-      const p = form.password.value;
-      const token = await login(u, p);
-      settings.token = token;
-      settings.username = u;
-      settings.password = form.remember.checked ? p : '';
-      boot();
+      await action(form);
     } catch (er) {
       err.textContent = er.message;
       err.hidden = false;
       btn.disabled = false;
     }
   };
-  app.querySelector('#token-form').onsubmit = (e) => {
-    e.preventDefault();
-    const t = e.target.token.value.trim();
-    if (!t) return;
-    settings.token = t;
-    boot();
-  };
+}
+
+/** Normal sign-in: system number + interface password. */
+function renderLogin(message = '') {
+  loginScreen(`
+    ${message ? `<div class="alert alert-danger small">${esc(message)}</div>` : ''}
+    <form class="form" id="login-form" autocomplete="on">
+      <label class="field"><span>מספר מערכת</span><input class="input" name="username" dir="ltr" inputmode="numeric" autocomplete="username" value="${esc(lastUsername.get())}" required></label>
+      ${pwField('password', 'סיסמת הממשק', 'current-password')}
+      <p class="field-error" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit"><i class="fa-solid fa-right-to-bracket"></i> התחברות</button>
+    </form>
+    <button class="btn btn-ghost btn-block" id="go-setup"><i class="fa-solid fa-key"></i> כניסה ראשונה / שכחתי סיסמה</button>`);
+  const form = app.querySelector('#login-form');
+  wireEyes(form);
+  bindForm(form, async (f) => { await login(f.username.value.trim(), f.password.value); await boot(); });
+  app.querySelector('#go-setup').onclick = () => renderSetup(form.username.value.trim());
+  setTimeout(() => (form.username.value ? form.password : form.username).focus(), 50);
+}
+
+/** First sign-in or forgotten password: prove ownership with the Yemot password. */
+function renderSetup(username = '') {
+  loginScreen(`
+    <h2 class="login-title">כניסה ראשונה / איפוס סיסמה</h2>
+    <p class="muted small">מזינים פעם אחת את סיסמת הניהול של ימות המשיח, ובוחרים סיסמה לממשק. סיסמת ימות נשמרת בשרת בלבד, כדי לחדש את החיבור אוטומטית.</p>
+    <form class="form" id="setup-form" autocomplete="off">
+      <label class="field"><span>מספר מערכת</span><input class="input" name="username" dir="ltr" inputmode="numeric" autocomplete="username" value="${esc(username || lastUsername.get())}" required></label>
+      ${pwField('yemot', 'סיסמת ניהול של ימות המשיח', 'off')}
+      ${pwField('pw1', 'סיסמה חדשה לממשק (לפחות 6 תווים)', 'new-password')}
+      ${pwField('pw2', 'אימות הסיסמה החדשה', 'new-password')}
+      <p class="field-error" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit"><i class="fa-solid fa-check"></i> שמירה וכניסה</button>
+    </form>
+    <button class="btn btn-ghost btn-block" id="go-login"><i class="fa-solid fa-arrow-right"></i> חזרה להתחברות</button>`);
+  const form = app.querySelector('#setup-form');
+  wireEyes(form);
+  bindForm(form, async (f) => {
+    if (f.pw1.value !== f.pw2.value) throw new Error('הסיסמאות החדשות אינן זהות.');
+    if (f.pw1.value.length < 6) throw new Error('סיסמת הממשק חייבת להכיל לפחות 6 תווים.');
+    await setup(f.username.value.trim(), f.yemot.value, f.pw1.value);
+    toast('הסיסמה נשמרה. מעכשיו נכנסים עם מספר המערכת וסיסמת הממשק.', 'success', 7000);
+    await boot();
+  });
+  app.querySelector('#go-login').onclick = () => renderLogin();
+}
+
+/** Signed in, but the server can no longer renew the Yemot token by itself. */
+function renderRelink(message = '') {
+  loginScreen(`
+    <h2 class="login-title">חידוש החיבור לימות המשיח</h2>
+    <div class="alert alert-warning small">${esc(message || 'נדרשת סיסמת ימות המשיח כדי לחדש את החיבור.')}</div>
+    <form class="form" id="relink-form" autocomplete="off">
+      ${pwField('yemot', 'סיסמת ניהול של ימות המשיח', 'off')}
+      <p class="field-error" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit"><i class="fa-solid fa-plug"></i> חידוש החיבור</button>
+    </form>
+    <button class="btn btn-ghost btn-block" id="do-logout">התנתקות</button>`);
+  const form = app.querySelector('#relink-form');
+  wireEyes(form);
+  bindForm(form, async (f) => { await relinkYemot(f.yemot.value); await boot(); });
+  app.querySelector('#do-logout').onclick = async () => { await logout().catch(() => {}); boot(); };
+}
+
+/** Signed in, Yemot asks for two-step verification. */
+function renderMfaNeeded(message = '') {
+  loginScreen(`
+    <div class="alert alert-warning small">${esc(message || 'ימות המשיח דורש אימות דו-שלבי.')}</div>
+    <button class="btn btn-primary btn-block" id="do-mfa"><i class="fa-solid fa-shield-halved"></i> ביצוע אימות</button>
+    <button class="btn btn-ghost btn-block" id="do-logout">התנתקות</button>`);
+  app.querySelector('#do-mfa').onclick = async () => { if (await runMfa()) boot(); };
+  app.querySelector('#do-logout').onclick = async () => { await logout().catch(() => {}); boot(); };
 }
 
 function renderShell() {
@@ -128,6 +185,8 @@ function renderShell() {
         ${brand}
         <nav class="nav">${NAV.map((n) => `<a href="#/${n.route}" data-route="${n.route}"><i class="fa-solid ${n.icon}"></i><span>${n.label}</span></a>`).join('')}</nav>
         <div class="sidebar-foot">
+          <div class="who"><i class="fa-solid fa-circle-user"></i><span dir="ltr">${esc(authState.username)}</span>
+            <button class="icon-btn" id="logout-btn" title="התנתקות"><i class="fa-solid fa-right-from-bracket"></i></button></div>
           ${legacyButton('btn-block')}
           <p class="credit">פיתוח מיוחד עבור ת"ת בת עין צפת<br>פותח בסייעתא דישמיא ע"י שימי טרייטל</p>
         </div>
@@ -147,6 +206,7 @@ function renderShell() {
       </div>
     </div>`;
   app.querySelector('#theme-btn').onclick = toggleTheme;
+  app.querySelector('#logout-btn').onclick = async () => { await logout().catch(() => {}); location.hash = '#/'; boot(); };
   const sidebar = app.querySelector('#sidebar');
   app.querySelector('#menu-btn').onclick = () => sidebar.classList.toggle('open');
   app.querySelector('#backdrop').onclick = () => sidebar.classList.remove('open');
@@ -189,7 +249,7 @@ function route() {
   view.replaceChildren(host);
   window.scrollTo(0, 0);
   try {
-    const c = entry.mod.mount(host, { route: entry.route, sub, query, reconnect: boot });
+    const c = entry.mod.mount(host, { route: entry.route, sub, query, reconnect: boot, logout: async () => { await logout().catch(() => {}); boot(); } });
     cleanup = typeof c === 'function' ? c : null;
   } catch (e) {
     console.error(e);
@@ -200,21 +260,23 @@ window.addEventListener('hashchange', route);
 
 // ---------------- Boot ----------------
 
+let booting = null;
 async function boot() {
-  renderConnecting();
-  const res = await connect();
-  if (res.status === 'ok') {
-    renderShell();
-    route();
-    return;
-  }
-  if (res.status === 'mfa') {
-    renderLogin(res.message);
-    if (await runMfa()) boot();
-    return;
-  }
-  renderLogin(res.status === 'error' ? res.message : '');
+  if (booting) return booting;
+  booting = (async () => {
+    renderConnecting();
+    const st = await refreshStatus();
+    if (!st.loggedIn) { widgetsStarted && location.reload(); renderLogin(st.status === 'error' ? st.message : ''); return; }
+    if (st.status === 'ok') { renderShell(); route(); return; }
+    if (st.status === 'mfa') { renderMfaNeeded(st.message); if (await runMfa()) { booting = null; boot(); } return; }
+    if (st.status === 'relink') { renderRelink(st.message); return; }
+    renderLogin(st.message);
+  })();
+  try { await booting; } finally { booting = null; }
 }
 
-const urlMsg = absorbUrlParams();
-boot().then(() => { if (urlMsg) toast(urlMsg, 'info', 7000); });
+// The server says the session ended / Yemot needs the password again.
+onServerEvent('unauthorized', () => { toast('פג תוקף ההתחברות, יש להתחבר מחדש.', 'warning'); boot(); });
+onServerEvent('relink', (msg) => renderRelink(msg));
+
+boot();

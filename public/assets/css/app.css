@@ -125,7 +125,7 @@ p { margin: 0 0 .6rem; }
   background: var(--surface); border-inline-start: 1px solid var(--border); overflow-y: auto;
 }
 .brand { display: flex; align-items: center; gap: .7rem; padding: .2rem .4rem; }
-.brand-logo { width: 40px; height: 40px; border-radius: 10px; }
+.brand-logo { width: 40px; height: 40px; border-radius: 10px; object-fit: contain; }
 .brand strong { display: block; font-size: 1.1rem; font-weight: 800; }
 .brand span { display: block; color: var(--text-2); font-size: .82rem; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
@@ -471,6 +471,10 @@ select.input { cursor: pointer; }
 .login-card .brand { justify-content: center; margin-bottom: .4rem; }
 .login-card .brand-logo { width: 52px; height: 52px; }
 .login-card .brand strong { font-size: 1.35rem; }
+.login-title { font-size: 1.15rem; font-weight: 800; text-align: center; }
+.who { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem; border-radius: 9px; background: var(--surface-2); color: var(--text-2); font-size: .88rem; }
+.who > i { color: var(--primary); font-size: 1.1rem; }
+.who span { flex: 1; font-weight: 600; color: var(--text); }
 .token-login summary { cursor: pointer; color: var(--text-2); font-size: .88rem; margin-bottom: .6rem; }
 .login-foot { padding-top: .8rem; border-top: 1px solid var(--border); }
 

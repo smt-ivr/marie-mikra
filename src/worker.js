@@ -3,13 +3,15 @@
 //
 //   /marie-mikra            -> redirect to /marie-mikra/ (so relative links work)
 //   /marie-mikra/api/...    -> passed through untouched (existing message API)
+//   /marie-mikra/srv/...    -> server for the new interface (see server.js)
 //   /marie-mikra/<file>     -> served from ./public/<file>
 //   /<file>                 -> served from ./public/<file>
+import { handleServer } from './server.js';
 
 const PREFIX = '/marie-mikra';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -23,8 +25,13 @@ export default {
       return fetch(request);
     }
 
-    if (path.startsWith(`${PREFIX}/`)) {
-      url.pathname = path.slice(PREFIX.length) || '/';
+    const base = path.startsWith(`${PREFIX}/`) ? PREFIX : '';
+    const local = base ? path.slice(PREFIX.length) || '/' : path;
+
+    if (local.startsWith('/srv/')) return handleServer(request, env, ctx, local.slice(4), base);
+
+    if (base) {
+      url.pathname = local;
       const res = await env.ASSETS.fetch(new Request(url.toString(), request));
       // Keep redirects issued by the asset server inside the /marie-mikra prefix.
       const loc = res.headers.get('Location');

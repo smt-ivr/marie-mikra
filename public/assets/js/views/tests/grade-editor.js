@@ -1,26 +1,26 @@
 // Professional grade editing for a single student record in a .ymgr report.
-import { getText, uploadText, hasActiveCallsIn } from '../../core/api.js';
-import { openModal, confirmDialog, toast } from '../../core/ui.js';
-import { esc, parentPath, toNumber, fmtNum, storageJson, storageSet } from '../../core/util.js';
+import { getText, uploadText, hasActiveCallsIn, server } from '../../core/api.js';
+import { openModal, confirmDialog, toast, loadingHtml, errorHtml } from '../../core/ui.js';
+import { esc, parentPath, toNumber, fmtNum } from '../../core/util.js';
 import { SCORE_KEY, FIELD_LABELS, lineToObject, parseLine, setField, replaceLineInText } from '../../core/ymgr.js';
 
-// ---------------- Change history (kept in this browser) ----------------
+// ---------------- Change history (kept on the server, visible from every computer) ----------------
 
-const HISTORY_KEY = 'mm_grade_history';
-const HISTORY_MAX = 300;
+const fromRow = (r) => ({
+  id: r.id, ts: r.at, path: r.path, name: r.name || '', phone: r.phone || '', school: r.school || '',
+  from: r.old_value ?? '', to: r.new_value ?? '', oldLine: r.old_line, newLine: r.new_line, note: r.note || '', undone: r.undone_at || null,
+});
 
 export const gradeHistory = {
-  all() { return storageJson(HISTORY_KEY, []); },
-  forPath(path) { return this.all().filter((h) => h.path === path); },
+  async forPath(path) {
+    const { items } = await server(`history?path=${encodeURIComponent(path)}`);
+    return items.map(fromRow);
+  },
   add(entry) {
-    const list = this.all();
-    list.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), ...entry });
-    storageSet(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+    return server('history', { method: 'POST', body: entry });
   },
   markUndone(id) {
-    const list = this.all();
-    const h = list.find((x) => x.id === id);
-    if (h) { h.undone = Date.now(); storageSet(HISTORY_KEY, JSON.stringify(list)); }
+    return server(`history/${encodeURIComponent(id)}/undone`, { method: 'POST', body: {} });
   },
 };
 
@@ -149,11 +149,11 @@ export function openGradeEditor({ path, line, occurrence = 0, isActive = false, 
       }
       const newLine = setField(line, SCORE_KEY, newValue);
       await writeLineChange(path, line, newLine, occurrence);
-      gradeHistory.add({
+      await gradeHistory.add({
         path, name: obj.ValName || '', phone: obj.Phone || '', school: obj.School || '',
         from: current, to: newValue, oldLine: line, newLine,
         note: m.body.querySelector('#grade-note').value.trim(),
-      });
+      }).catch(() => toast('הציון נשמר, אך הרישום ביומן השינויים נכשל.', 'warning'));
       m.close();
       toast(`הציון של ${obj.ValName || 'התלמיד'} עודכן מ-${current} ל-${newValue}`, 'success');
       onSaved && onSaved();
@@ -168,14 +168,15 @@ export function openGradeEditor({ path, line, occurrence = 0, isActive = false, 
 
 /** Change log dialog for a report, with undo. */
 export function openHistory(path, onChanged) {
-  const m = openModal({ title: 'יומן שינויי ציונים', icon: 'fa-clock-rotate-left', size: 'lg' });
-  const render = () => {
-    const list = gradeHistory.forPath(path);
+  const m = openModal({ title: 'יומן שינויי ציונים', icon: 'fa-clock-rotate-left', size: 'lg', body: loadingHtml() });
+  const render = async () => {
+    let list;
+    try { list = await gradeHistory.forPath(path); } catch (e) { m.setBody(errorHtml(e)); return; }
     if (!list.length) {
-      m.setBody('<div class="state state-empty"><i class="fa-solid fa-clock-rotate-left"></i><p>עדיין לא נערכו ציונים בדוח זה מהמחשב הזה.</p></div>');
+      m.setBody('<div class="state state-empty"><i class="fa-solid fa-clock-rotate-left"></i><p>עדיין לא נערכו ציונים בדוח זה.</p></div>');
       return;
     }
-    m.setBody(`<p class="muted">היומן נשמר בדפדפן במחשב זה בלבד. ניתן לבטל שינוי כל עוד הרשומה לא השתנתה מאז.</p>
+    m.setBody(`<p class="muted">היומן נשמר בשרת ומוצג מכל מחשב. ניתן לבטל שינוי כל עוד הרשומה לא השתנתה מאז.</p>
       <div class="table-wrap"><table class="data-table"><thead><tr>
         <th>מתי</th><th>תלמיד</th><th>שינוי</th><th>סיבה</th><th></th></tr></thead><tbody>
       ${list.map((h) => `<tr class="${h.undone ? 'is-muted' : ''}">
@@ -186,15 +187,15 @@ export function openHistory(path, onChanged) {
         <td>${h.undone ? '<span class="muted small">בוטל</span>' : `<button class="btn btn-sm btn-ghost" data-undo="${esc(h.id)}"><i class="fa-solid fa-rotate-left"></i> ביטול שינוי</button>`}</td>
       </tr>`).join('')}</tbody></table></div>`);
     m.body.querySelectorAll('[data-undo]').forEach((b) => (b.onclick = async () => {
-      const h = gradeHistory.all().find((x) => x.id === b.dataset.undo);
+      const h = list.find((x) => x.id === b.dataset.undo);
       if (!h) return;
       const ok = await confirmDialog({ title: 'ביטול שינוי', message: `להחזיר את הציון של <strong>${esc(h.name)}</strong> מ-${esc(h.to)} ל-${esc(h.from)}?`, confirmText: 'כן, החזר' });
       if (!ok) return;
       b.disabled = true;
       try {
         await writeLineChange(path, h.newLine, h.oldLine, 0);
-        gradeHistory.markUndone(h.id);
-        gradeHistory.add({ path, name: h.name, phone: h.phone, school: h.school, from: h.to, to: h.from, oldLine: h.newLine, newLine: h.oldLine, note: 'ביטול שינוי קודם' });
+        await gradeHistory.markUndone(h.id);
+        await gradeHistory.add({ path, name: h.name, phone: h.phone, school: h.school, from: h.to, to: h.from, oldLine: h.newLine, newLine: h.oldLine, note: 'ביטול שינוי קודם' });
         toast('השינוי בוטל והציון הוחזר.', 'success');
         render();
         onChanged && onChanged();

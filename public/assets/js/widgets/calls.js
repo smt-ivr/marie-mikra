@@ -4,7 +4,8 @@ import { PATHS } from '../core/settings.js';
 import { openModal } from '../core/ui.js';
 import { esc } from '../core/util.js';
 
-const INTERVAL = 2000;
+// Every poll is a request to our server, so keep it moderate (paused while the tab is hidden).
+const INTERVAL = 5000;
 let calls = [];
 let timer = null;
 let modal = null;
