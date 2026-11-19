@@ -7,7 +7,7 @@
 const mfaController = {
     modalOverlay: null,
     apiToken: null,
-    API_BASE: 'https://www.call2all.co.il/ym/api',
+    API_BASE: location.origin + '/marie-mikra/api/yemot', // דרך השרת
 
     // משתנה מצב לשמירת נתונים בין שלבים
     state: {

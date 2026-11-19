@@ -1,8 +1,9 @@
-// Client for the Yemot HaMashiach API, through our own server.
-// The browser never sees the Yemot token: the server (src/server.js) holds it,
-// attaches it to every call and renews it automatically.
+// Client for the system API, through the server of "מארי מקרא" (same server as the original site).
+// The browser never sees the token: the server holds it and attaches it to every call.
+// Sign-in is shared with the original site (cookie on /marie-mikra).
 
-export const API_BASE = 'srv/yemot';
+export const API_ROOT = '/marie-mikra/api/';
+export const API_BASE = `${API_ROOT}yemot`;
 
 export class ApiError extends Error {
   constructor(message, data) {
@@ -19,13 +20,16 @@ export function isNotFound(err) {
 
 const READ_ONLY = new Set(['GetTextFile', 'RenderYMGRFile', 'GetIVR2Dir', 'GetCustomerData']);
 
-// main.js registers handlers for "signed out" and "Yemot needs the password again".
-const handlers = { unauthorized: null, relink: null };
+// main.js registers a handler for "signed out"
+const handlers = { unauthorized: null };
 export function onServerEvent(name, fn) { handlers[name] = fn; }
 
+// Our server answers errors as { ok: false, error: { code, message } }
 function serverProblem(res, data) {
-  if (res.status === 401 && data?.auth) { handlers.unauthorized && handlers.unauthorized(); return new ApiError('יש להתחבר מחדש.', data); }
-  if (res.status === 409 && data?.relink) { handlers.relink && handlers.relink(data.message); return new ApiError(data.message, data); }
+  if (data && data.ok === false && data.error) {
+    if (res.status === 401) handlers.unauthorized && handlers.unauthorized();
+    return new ApiError(data.error.message || `שגיאת שרת (${res.status})`, data);
+  }
   return null;
 }
 
@@ -41,15 +45,13 @@ export async function call(endpoint, params = {}, opts = {}) {
     if (opts.post) {
       res = await fetch(`${API_BASE}/${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-MM-Client': '1' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams(p),
         credentials: 'same-origin',
       });
     } else {
       if (READ_ONLY.has(endpoint)) p._ = Date.now();
-      res = await fetch(`${API_BASE}/${endpoint}?${new URLSearchParams(p)}`, {
-        headers: { 'X-MM-Client': '1' }, cache: 'no-store', credentials: 'same-origin',
-      });
+      res = await fetch(`${API_BASE}/${endpoint}?${new URLSearchParams(p)}`, { cache: 'no-store', credentials: 'same-origin' });
     }
   } catch {
     throw new ApiError('אין תקשורת עם השרת. בדקו את החיבור לאינטרנט.');
@@ -62,20 +64,19 @@ export async function call(endpoint, params = {}, opts = {}) {
   }
   const problem = serverProblem(res, data);
   if (problem) throw problem;
-  if (data && data.ok === false && data.message) throw new ApiError(data.message, data);
   if (data && 'responseStatus' in data && data.responseStatus !== 'OK' && !opts.allowError) {
     throw new ApiError(data.message || 'השרת החזיר שגיאה', data);
   }
   return data;
 }
 
-/** Calls to our own server (sign-in, history, audit). */
+/** Calls to our own server (sign-in, config, grade history). Returns the `data` part. */
 export async function server(path, { method = 'GET', body } = {}) {
   let res;
   try {
-    res = await fetch(`srv/${path}`, {
+    res = await fetch(`${API_ROOT}${path}`, {
       method,
-      headers: { 'X-MM-Client': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      headers: body ? { 'Content-Type': 'application/json' } : {},
       body: body ? JSON.stringify(body) : undefined,
       cache: 'no-store',
       credentials: 'same-origin',
@@ -85,11 +86,12 @@ export async function server(path, { method = 'GET', body } = {}) {
   }
   let data;
   try { data = await res.json(); } catch { throw new ApiError(`השרת החזיר תשובה לא תקינה (${res.status})`); }
-  if (!res.ok || data.ok === false) {
-    if (!path.startsWith('auth/')) serverProblem(res, data);
-    throw new ApiError(data.message || `שגיאת שרת (${res.status})`, data);
+  if (!res.ok || !data || data.ok === false) {
+    const e = serverProblem(res, data) || new ApiError(`שגיאת שרת (${res.status})`, data);
+    e.status = res.status;
+    throw e;
   }
-  return data;
+  return data.data;
 }
 
 // ---------- Files & folders ----------

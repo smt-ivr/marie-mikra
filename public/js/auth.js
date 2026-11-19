@@ -3,7 +3,7 @@
 // ===================================
 
 const auth = {
-    API_BASE: 'https://www.call2all.co.il/ym/api',
+    API_BASE: location.origin + '/marie-mikra/api/yemot', // כל הפניות עוברות דרך השרת של מארי מקרא, שמוסיף את הטוקן מהמסד
     token: null,
     listenerAdded: false, // דגל לוודא שהמאזין נוסף רק פעם אחת
     connectionStatus: {
@@ -124,7 +124,7 @@ const auth = {
         // --- סוף התיקון ---
 
         this.updateStatusUI(); // הצג סטטוס התחלתי
-        let storedToken = localStorage.getItem('api_token');
+        let storedToken = 'server'; // השרת מוסיף את הטוקן האמיתי. הדפדפן לא שומר טוקן או סיסמה
         const username = localStorage.getItem('username');
         const password = localStorage.getItem('password');
 

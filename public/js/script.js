@@ -28,7 +28,10 @@ const app = {
         await auth.initialize();
         if (auth.connectionStatus.status === 'ok') {
             this.showMainContent();
-            this.switchView('tests-view');
+            // הלשונית הראשונה שיש למשתמש הרשאה אליה (ההרשאות מהשרת – ב-session.js)
+            const firstView = (typeof MsSession !== 'undefined' && MsSession.firstAllowedTab()) || 'tests-view';
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.toggle('active', b.dataset.view === firstView));
+            this.switchView(firstView);
             
             // הפעלת מערכת ההודעות (החדשה או הישנה לפי המתג)
             if (this.USE_OLD_ANNOUNCEMENTS) {
@@ -458,4 +461,5 @@ const app = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => app.init());
+// האתר נטען רק אחרי הכניסה למערכת (מסך הכניסה – session.js)
+document.addEventListener('DOMContentLoaded', () => MsSession.ready().then(() => app.init()));
