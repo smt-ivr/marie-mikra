@@ -103,7 +103,7 @@ const realtimeCallsController = {
             const token = auth.getToken();
             if (!token) return;
 
-            const apiUrl = `${auth.API_BASE}/${this.API_ENDPOINT}?token=${token}`;
+            const apiUrl = `${auth.API_BASE}/${this.API_ENDPOINT}`;
             const response = await fetch(apiUrl);
             
             if (!response.ok) return; 

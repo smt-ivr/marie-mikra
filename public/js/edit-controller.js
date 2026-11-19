@@ -77,7 +77,7 @@ const editController = {
 
     fetchFileContent: async function(path) {
         const token = auth.getToken();
-        const apiUrl = `${auth.API_BASE}/GetTextFile?token=${token}&what=${encodeURIComponent(path)}&_t=${new Date().getTime()}`;
+        const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(path)}&_t=${new Date().getTime()}`;
         const res = await fetch(apiUrl);
         const json = await res.json();
         if (json.responseStatus !== 'OK') return ""; 
@@ -269,7 +269,7 @@ const editController = {
 
     checkActiveCalls: async function() {
         const token = auth.getToken();
-        const url = `${auth.API_BASE}/GetIncomingCalls?token=${token}`;
+        const url = `${auth.API_BASE}/GetIncomingCalls`;
         
         const res = await fetch(url);
         const json = await res.json();
@@ -387,7 +387,7 @@ const editController = {
             const uploadRes = await fetch(`${auth.API_BASE}/UploadTextFile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ token, what: this.currentFilePath, contents: newContent })
+                body: new URLSearchParams({ what: this.currentFilePath, contents: newContent })
             });
             
             const json = await uploadRes.json();
@@ -453,7 +453,7 @@ const editController = {
              await fetch(`${auth.API_BASE}/UploadTextFile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ token, what: iniPath, contents: newContent })
+                body: new URLSearchParams({ what: iniPath, contents: newContent })
             });
             
             console.log(`נוקו רשומות פנימיות עבור ${idsToRemove.size} תלמידים.`);

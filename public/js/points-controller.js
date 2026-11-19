@@ -247,7 +247,7 @@ const pointsController = {
     fetchFileContent: async function(path, isOptional = false) {
         const token = auth.getToken();
         // --- כאן בוצע התיקון: הוספת פרמטר זמן ---
-        const apiUrl = `${auth.API_BASE}/GetTextFile?token=${token}&what=${encodeURIComponent(path)}&_=${new Date().getTime()}`;
+        const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(path)}&_=${new Date().getTime()}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
@@ -278,7 +278,7 @@ const pointsController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
 
-        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?token=${token}&path=${encodeURIComponent(path)}`;
+        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();

@@ -181,7 +181,7 @@ const testsController = {
         
         try {
             const token = auth.getToken();
-            const response = await fetch(`${auth.API_BASE}/GetTextFile?token=${token}&what=ivr2:/1/1/ext.ini`);
+            const response = await fetch(`${auth.API_BASE}/GetTextFile?what=ivr2:/1/1/ext.ini`);
             if (!response.ok) throw new Error('Network response was not ok');
             const text = await response.text();
             
@@ -255,7 +255,7 @@ const testsController = {
     toggleTestStatus: async function(action) {
         const value = action === 'block' ? '2019-07-09-18-52-30' : 'no';
         const token = auth.getToken();
-        const apiUrl = `${auth.API_BASE}/UpdateExtension?token=${token}&path=ivr2:/1/1&enter_foldar_end_time=${value}`;
+        const apiUrl = `${auth.API_BASE}/UpdateExtension?path=ivr2:/1/1&enter_foldar_end_time=${value}`;
         
         const toggleBtn = document.getElementById('test-status-toggle-btn');
         const originalContent = toggleBtn.innerHTML;

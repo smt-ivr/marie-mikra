@@ -21,7 +21,7 @@ const studentsController = {
     fetchDirectoryData: async function(path) {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
-        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?token=${token}&path=${encodeURIComponent(path)}`;
+        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();
@@ -444,7 +444,7 @@ const studentsController = {
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ token, what: this.STUDENTS_INI_FILE_PATH, contents: newContent })
+                body: new URLSearchParams({ what: this.STUDENTS_INI_FILE_PATH, contents: newContent })
             });
 
             if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);

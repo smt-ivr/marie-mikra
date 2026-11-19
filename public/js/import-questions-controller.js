@@ -61,7 +61,7 @@ const importQuestionsController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן התחברות.");
         
-        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?token=${token}&path=${encodeURIComponent(path)}`;
+        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת תקשורת מול השרת (${response.status})`);
         const result = await response.json();
@@ -75,7 +75,7 @@ const importQuestionsController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן התחברות.");
         
-        const apiUrl = `${auth.API_BASE}/FileAction?token=${token}&action=copy&what=${encodeURIComponent(what)}&target=${encodeURIComponent(target)}`;
+        const apiUrl = `${auth.API_BASE}/FileAction?action=copy&what=${encodeURIComponent(what)}&target=${encodeURIComponent(target)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת בהעתקה (${response.status})`);
         const result = await response.json();
@@ -93,7 +93,7 @@ const importQuestionsController = {
         if (!token) throw new Error("לא נמצא טוקן התחברות.");
         
         const blockPath = 'ivr2:/1/1';
-        const apiUrl = `${auth.API_BASE}/UpdateExtension?token=${token}&path=${encodeURIComponent(blockPath)}&enter_foldar_end_time=no`;
+        const apiUrl = `${auth.API_BASE}/UpdateExtension?path=${encodeURIComponent(blockPath)}&enter_foldar_end_time=no`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת בשחרור המבחן (${response.status})`);
         const result = await response.json();

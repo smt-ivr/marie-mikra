@@ -62,7 +62,7 @@ const pointsEditController = {
     fetchIniFileContent: async function(filePath) {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
-        const apiUrl = `${auth.API_BASE}/GetTextFile?token=${token}&what=${encodeURIComponent(filePath)}`;
+        const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(filePath)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();
@@ -221,7 +221,7 @@ const pointsEditController = {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ token, what: this.currentPointsFilePath, contents: content })
+            body: new URLSearchParams({ what: this.currentPointsFilePath, contents: content })
         });
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();

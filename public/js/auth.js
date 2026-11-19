@@ -48,7 +48,7 @@ const auth = {
              return { status: 'error', message: 'לא נמצא טוקן.' };
         }
         try {
-            const isPassResponse = await fetch(`${this.API_BASE}/MFASession?token=${token}&action=isPass`);
+            const isPassResponse = await fetch(`${this.API_BASE}/MFASession?action=isPass`);
             const isPassData = await isPassResponse.json();
 
             if (isPassData.responseStatus !== 'OK') {
@@ -60,7 +60,7 @@ const auth = {
                 return { status: 'ok', message: `מאומת (${translatedReason})` };
             }
 
-            const tryResponse = await fetch(`${this.API_BASE}/MFASession?token=${token}&action=try`);
+            const tryResponse = await fetch(`${this.API_BASE}/MFASession?action=try`);
             const tryData = await tryResponse.json();
 
             if (tryData.responseStatus === 'OK' && tryData.isPass) {

@@ -90,7 +90,7 @@ const questionsController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
         
-        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?token=${token}&path=${encodeURIComponent(path)}`;
+        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();
@@ -126,7 +126,7 @@ const questionsController = {
     createAudioPlayer: function(filePath) {
         if (!filePath) return '<span class="no-audio">אין קובץ</span>';
         const token = auth.getToken();
-        const url = `${auth.API_BASE}/DownloadFile?token=${token}&path=${encodeURIComponent(filePath)}`;
+        const url = `${auth.API_BASE}/DownloadFile?path=${encodeURIComponent(filePath)}`;
         return `<audio controls src="${url}"></audio>`;
     },
     

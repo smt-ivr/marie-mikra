@@ -336,7 +336,7 @@ const timeController = {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ token, what: this.TIME_INI_FILE_PATH, contents: content })
+            body: new URLSearchParams({ what: this.TIME_INI_FILE_PATH, contents: content })
         });
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();

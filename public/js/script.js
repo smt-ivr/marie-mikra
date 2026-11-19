@@ -354,7 +354,7 @@ const app = {
 
         const token = auth.getToken();
         // --- כאן בוצע התיקון ---
-        const apiUrl = `${auth.API_BASE}/RenderYMGRFile?token=${token}&wath=${filePath}&convertType=json&_=${new Date().getTime()}`;
+        const apiUrl = `${auth.API_BASE}/RenderYMGRFile?wath=${filePath}&convertType=json&_=${new Date().getTime()}`;
         try {
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
