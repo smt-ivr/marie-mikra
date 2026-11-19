@@ -1,6 +1,6 @@
 // App shell, sign-in screens and hash router.
 import { authState, refreshStatus, logout, can, isMaster, changeOwnPassword, LOGIN_URL, ADMIN_URL } from './core/auth.js';
-import { getCustomerData, onServerEvent } from './core/api.js';
+import { getCustomerData, onServerEvent, server } from './core/api.js';
 import { toast, loadingHtml, closeAllModals, openModal } from './core/ui.js';
 import { esc, storageGet, storageSet, fmtNum } from './core/util.js';
 import { startCalls } from './widgets/calls.js';
@@ -165,7 +165,11 @@ function openPersonalArea({ prompt = false } = {}) {
       : '<button class="btn btn-ghost" data-act="later">סגירה</button>',
   });
   const later = m.footer.querySelector('[data-act=later]');
-  if (later) later.onclick = () => m.close();
+  if (later) later.onclick = () => {
+    m.close();
+    // "אחר כך" – נשמר בחשבון בשרת (המנהל יכול לאפס בדף הניהול)
+    if (prompt) { u.password_prompt_dismissed = true; server('auth/password-prompt/dismiss', { method: 'POST', body: {} }).catch(() => {}); }
+  };
   const f = m.body.querySelector('#pa-form');
   if (!f) return;
   const err = f.querySelector('.field-error');
@@ -194,7 +198,7 @@ function openPersonalArea({ prompt = false } = {}) {
 
 function maybePromptPassword() {
   const u = authState.user;
-  if (!u || u.has_password !== false || !can('self_password')) return;
+  if (!u || u.has_password !== false || u.password_prompt_dismissed || !can('self_password')) return;
   try { if (sessionStorage.getItem('mmPasswordPromptShown') === '1') return; sessionStorage.setItem('mmPasswordPromptShown', '1'); } catch { /* ignore */ }
   openPersonalArea({ prompt: true });
 }

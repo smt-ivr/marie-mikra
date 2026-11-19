@@ -95,6 +95,14 @@ const MIGRATIONS = [
       `CREATE INDEX IF NOT EXISTS mm_grade_history_path ON mm_grade_history(username, path, at)`,
     ],
   },
+  {
+    // "אחר כך" בהצעה ליצור סיסמה – נשמר בחשבון; המנהל יכול לאפס כדי שההצעה תופיע שוב
+    version: 3,
+    name: 'password_prompt_dismissed',
+    sql: [
+      `ALTER TABLE mm_accounts ADD COLUMN password_prompt_dismissed TEXT`,
+    ],
+  },
 ];
 
 const tableExists = async (env, name) =>

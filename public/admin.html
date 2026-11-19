@@ -233,6 +233,7 @@
         <input id="uPass" type="text" class="ltr" autocomplete="new-password">
         <div class="hint" id="uPassHint"></div>
         <label class="check hidden" id="uRemovePassWrap" style="margin-top:8px"><input type="checkbox" id="uRemovePass"> להסיר את הסיסמה (כניסה רק לפי IP / Google)</label>
+        <label class="check hidden" id="uPromptWrap" style="margin-top:8px"><input type="checkbox" id="uPromptReset"> <span id="uPromptText">להציג שוב את ההצעה ליצור סיסמה</span></label>
       </fieldset>
 
       <fieldset>
@@ -334,6 +335,7 @@ async function loadUsers() {
   $('usersRows').innerHTML = accounts.map((a) => {
     const ways = [
       a.has_password ? '<span class="tag">סיסמה</span>' : '',
+      !a.has_password && a.password_prompt_dismissed ? '<span class="tag off" title="לחץ &quot;אחר כך&quot; בהצעה ליצור סיסמה">דחה יצירת סיסמה</span>' : '',
       ...a.ips.map((x) => `<span class="tag" title="${esc(x.label)}">IP <span class="ltr">${esc(x.ip)}</span></span>`),
       a.email ? '<span class="tag">Google</span>' : '',
     ].join('') || '<span class="tag off">אין</span>';
@@ -385,6 +387,10 @@ function openUser(a) {
     : 'לפחות 4 תווים (אפשר גם 4 ספרות). הסיסמה מזהה את המשתמש, ולכן צריכה להיות שונה משל משתמשים אחרים. אפשר להשאיר ריק – אם יש למשתמש ההרשאה "יצירת והחלפת סיסמה אישית", הוא יוכל ליצור סיסמה בעצמו באזור האישי';
   $('uRemovePass').checked = false;
   $('uRemovePassWrap').classList.toggle('hidden', !a?.has_password);
+  // המשתמש לחץ "אחר כך" בהצעה ליצור סיסמה – אפשר להציג לו אותה שוב
+  $('uPromptReset').checked = false;
+  $('uPromptWrap').classList.toggle('hidden', !(a && !a.has_password && a.password_prompt_dismissed));
+  if (a?.password_prompt_dismissed) $('uPromptText').textContent = `להציג שוב את ההצעה ליצור סיסמה (לחץ "אחר כך" ב-${a.password_prompt_dismissed})`;
   $('ipRows').innerHTML = '';
   (a?.ips || []).forEach((x) => addIpRow(x.ip, x.label));
   $('myIp').textContent = myIp;
@@ -417,6 +423,7 @@ $('userForm').addEventListener('submit', async (e) => {
   };
   if ($('uPass').value) body.password = $('uPass').value;
   else if ($('uRemovePass').checked) body.remove_password = true;
+  if ($('uPromptReset').checked) body.reset_password_prompt = true;
   $('userSave').disabled = true; $('userMsg').textContent = '';
   try {
     if (editing) await api('PUT', 'admin/accounts/' + editing.id, body);
