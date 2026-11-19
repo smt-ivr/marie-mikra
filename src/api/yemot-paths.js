@@ -100,7 +100,7 @@ function requirements(method, params) {
 }
 
 // פעולות שאינן על קבצים (שיחות, פרטי מערכת, אימות, צינתוקים) – בלי כתובת
-export const PATHLESS = new Set(['GetIncomingCalls', 'GetCustomerData', 'MFASession', 'GetSession',
+export const PATHLESS = new Set(['GetIncomingCalls', 'GetCustomerData',
   'GetTasks', 'GetTasksData', 'GetTasksLogs', 'UpdateTask', 'TzintukimListManagement', 'RunTzintuk']);
 
 /**

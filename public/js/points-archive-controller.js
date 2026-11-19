@@ -29,9 +29,7 @@ const pointsArchiveController = {
         }
     },
 
-    fetchDirectoryData: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    fetchDirectoryData: async function(path) {
 
         const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);

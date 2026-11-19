@@ -3,7 +3,6 @@ import { authState, refreshStatus, logout, can, isMaster, LOGIN_URL, ADMIN_URL }
 import { getCustomerData, onServerEvent } from './core/api.js';
 import { toast, loadingHtml, closeAllModals } from './core/ui.js';
 import { esc, storageGet, storageSet, fmtNum } from './core/util.js';
-import { runMfa } from './widgets/mfa.js';
 import { startCalls } from './widgets/calls.js';
 import { startMessages } from './widgets/message.js';
 
@@ -76,23 +75,6 @@ function loginScreen(inner) {
 // Not signed in: sign-in happens on the main site (same users, same connection)
 function goToLogin() {
   location.href = LOGIN_URL;
-}
-
-/** Signed in, but the connection needs attention. */
-function renderConnectionProblem(conn) {
-  const master = isMaster();
-  const isMfa = conn?.status === 'mfa';
-  loginScreen(`
-    <div class="alert alert-warning small">${esc(conn?.message || 'אין חיבור למערכת.')}</div>
-    ${isMfa ? '<button class="btn btn-primary btn-block" id="do-mfa"><i class="fa-solid fa-shield-halved"></i> ביצוע אימות</button>'
-      : master ? `<p class="muted small">יש להזין טוקן חדש בהגדרות הניהול.</p><a class="btn btn-primary btn-block" href="${ADMIN_URL}" target="_blank" rel="noopener"><i class="fa-solid fa-user-shield"></i> מעבר לניהול</a>`
-        : '<p class="muted small">פנו למנהל הראשי כדי לחדש את החיבור.</p>'}
-    <button class="btn btn-ghost btn-block" id="retry"><i class="fa-solid fa-rotate"></i> ניסיון נוסף</button>
-    <button class="btn btn-ghost btn-block" id="do-logout">יציאה</button>`);
-  const mfa = app.querySelector('#do-mfa');
-  if (mfa) mfa.onclick = async () => { if (await runMfa()) boot(); };
-  app.querySelector('#retry').onclick = () => boot();
-  app.querySelector('#do-logout').onclick = async () => { await logout().catch(() => {}); goToLogin(); };
 }
 
 // ---------------- Shell ----------------
@@ -195,10 +177,8 @@ async function boot() {
       return;
     }
     if (!can('new_site')) { location.href = LEGACY_URL; return; }
-    const conn = st.connection || {};
-    if (conn.status === 'ok') { renderShell(); route(); return; }
-    if (conn.status === 'mfa') { renderConnectionProblem(conn); if (await runMfa()) { booting = null; boot(); } return; }
-    renderConnectionProblem(conn);
+    renderShell();
+    route();
   })();
   try { await booting; } finally { booting = null; }
 }

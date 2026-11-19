@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="css/announcements-reply-style.css">
     <link rel="stylesheet" href="css/tzintuk-style.css">
     <link rel="stylesheet" href="css/time-style.css">
-    <link rel="stylesheet" href="css/mfa-style.css">
     <link rel="stylesheet" href="css/system-info-style.css">
     <link rel="stylesheet" href="css/realtime-calls-style.css">
     <link rel="stylesheet" href="css/reports-style.css">
@@ -132,38 +131,9 @@
                 <span class="close-btn" title="סגירה">&times;</span>
             </div>
             <div class="modal-body">
-                <div id="connection-status">
-                    <span class="status-light"></span>
-                    <span id="status-text">בודק סטטוס...</span>
-                </div>
                 <div id="settings-message-area"></div> 
 
                 <form id="settings-form">
-                    <p class="form-description">(ניתן גם להכניס טוקן ידני)</p>
-                    <div class="form-group">
-                        <label for="token-input">טוקן (Token):</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="token-input">
-                            <i class="fa fa-eye" id="toggleToken"></i>
-                        </div>
-                    </div>
-                    <hr class="separator">
-                    <p class="form-description">חידוש טוקן אוטומטי </p>
-                    <div class="form-group">
-                        <label for="username-input">מספר מערכת:</label>
-                        <input type="text" id="username-input" placeholder="מספר מערכת">
-                    </div>
-                    <div class="form-group">
-                        <label for="password-input">סיסמה:</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="password-input" placeholder="סיסמת ניהול">
-                            <i class="fa fa-eye" id="togglePassword"></i>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <button type="button" id="generate-token-btn" class="button button-primary"><i class="fas fa-key"></i> צור טוקן</button>
-                    </div>
-                    <hr class="separator">
                     <p class="form-description">נתיבי קבצים</p>
                     <div class="form-group">
                         <label for="active-test-path-input">נתיב מבחן פעיל:</label>
@@ -239,7 +209,6 @@
     </div>
 
     <script src="js/session.js"></script>
-    <script src="js/migration.js"></script>
     
     <script src="js/questions-controller.js"></script>
     <script src="js/edit-controller.js"></script>
@@ -260,7 +229,6 @@
     <script src="js/tzintuk-list-controller.js"></script>
     <script src="js/tzintuk-tasks-controller.js"></script>
     
-    <script src="js/mfa-controller.js"></script>
     
     <script src="js/auth.js"></script>
     <script src="js/system-info-controller.js"></script>

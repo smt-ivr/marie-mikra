@@ -41,9 +41,7 @@ const systemInfoController = {
         }
     },
 
-    fetchCustomerData: async function() {
-        const token = auth.getToken();
-        if (!token) return null;
+    fetchCustomerData: async function() {
         const apiUrl = `${auth.API_BASE}/GetCustomerData?_=${new Date().getTime()}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`Network error: ${response.status}`);

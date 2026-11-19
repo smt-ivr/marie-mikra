@@ -149,8 +149,7 @@ const reportsController = {
     },
 
     // --- לוגיקה ללוג סיסמאות ---
-    fetchAndRenderPasswordLog: async function() {
-        const token = auth.getToken();
+    fetchAndRenderPasswordLog: async function() {
         const url = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(this.PASSWORD_LOG_PATH)}&_=${Date.now()}`;
         
         const response = await fetch(url);
@@ -209,8 +208,7 @@ const reportsController = {
     },
 
     // --- לוגיקה ללוג כניסות (YMGR) ---
-    fetchAndRenderEnterIDLog: async function() {
-        const token = auth.getToken();
+    fetchAndRenderEnterIDLog: async function() {
         const url = `${auth.API_BASE}/RenderYMGRFile?wath=${encodeURIComponent(this.ENTERID_LOG_PATH)}&convertType=json&_=${Date.now()}`;
         
         const response = await fetch(url);

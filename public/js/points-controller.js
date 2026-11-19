@@ -244,8 +244,7 @@ const pointsController = {
     },
 
     // פונקציית עזר כללית לקריאת תוכן קובץ עם טיפול בשגיאות - תוקנה!
-    fetchFileContent: async function(path, isOptional = false) {
-        const token = auth.getToken();
+    fetchFileContent: async function(path, isOptional = false) {
         // --- כאן בוצע התיקון: הוספת פרמטר זמן ---
         const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(path)}&_=${new Date().getTime()}`;
         try {
@@ -274,9 +273,7 @@ const pointsController = {
     , 
 
     // פונקציית עזר לקריאת נתוני תיקייה (נדרש עבור mtime)
-    fetchDirectoryData: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    fetchDirectoryData: async function(path) {
 
         const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);

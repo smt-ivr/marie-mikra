@@ -86,9 +86,7 @@ const questionsController = {
         }
     },
 
-    fetchDirectoryData: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    fetchDirectoryData: async function(path) {
         
         const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
@@ -124,8 +122,7 @@ const questionsController = {
     },
 
     createAudioPlayer: function(filePath) {
-        if (!filePath) return '<span class="no-audio">אין קובץ</span>';
-        const token = auth.getToken();
+        if (!filePath) return '<span class="no-audio">אין קובץ</span>';
         const url = `${auth.API_BASE}/DownloadFile?path=${encodeURIComponent(filePath)}`;
         return `<audio controls src="${url}"></audio>`;
     },

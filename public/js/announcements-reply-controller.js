@@ -160,9 +160,7 @@ const announcementsReplyController = {
         }
     },
 
-    apiSendSms: async function(message, phone) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    apiSendSms: async function(message, phone) {
 
         const params = new URLSearchParams({
             from: '', // ישתמש בברירת המחדל של המערכת
@@ -201,9 +199,7 @@ const announcementsReplyController = {
         document.getElementById('announcement-log-modal').classList.remove('visible');
     },
 
-    apiGetLog: async function() {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    apiGetLog: async function() {
         
         const params = new URLSearchParams({ limit: 100 }); // הגבלה ל-100 אחרונים
         const apiUrl = `${auth.API_BASE}/GetSmsOutLog?${params.toString()}`;

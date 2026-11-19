@@ -330,8 +330,7 @@ const timeController = {
     },
     
     uploadNewContent: async function(content) {
-        // ... (ללא שינוי מהגרסה הקודמת) ...
-        const token = auth.getToken();
+        // ... (ללא שינוי מהגרסה הקודמת) ...
         const apiUrl = `${auth.API_BASE}/UploadTextFile`;
         const response = await fetch(apiUrl, {
             method: 'POST',

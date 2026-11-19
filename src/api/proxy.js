@@ -18,10 +18,8 @@ const YEMOT_METHODS = {
   GetIVR2Dir: 'read',
   RenderYMGRFile: 'read',
   DownloadFile: 'read',
-  GetSession: 'read',
   GetIncomingCalls: 'read',
   GetCustomerData: 'read',
-  MFASession: 'read',
   GetTasks: 'read',
   GetTasksData: 'read',
   GetTasksLogs: 'read',
@@ -36,14 +34,14 @@ const YEMOT_METHODS = {
 
 const YEMOT_NAMES = {
   GetTextFile: 'קריאת קובץ', GetIVR2Dir: 'רשימת תיקייה', RenderYMGRFile: 'קריאת דוח',
-  DownloadFile: 'הורדת קובץ', GetSession: 'בדיקת חיבור', GetIncomingCalls: 'שיחות פעילות', GetCustomerData: 'פרטי מערכת',
-  MFASession: 'אימות דו-שלבי', GetTasks: 'רשימת משימות', GetTasksData: 'פרטי משימה', GetTasksLogs: 'יומן משימה',
+  DownloadFile: 'הורדת קובץ', GetIncomingCalls: 'שיחות פעילות', GetCustomerData: 'פרטי מערכת',
+  GetTasks: 'רשימת משימות', GetTasksData: 'פרטי משימה', GetTasksLogs: 'יומן משימה',
   TzintukimListManagement: 'רשימת צינתוקים', UploadTextFile: 'שמירת קובץ', UploadFile: 'העלאת קובץ',
   FileAction: 'פעולה על קבצים', UpdateExtension: 'עדכון שלוחה', UpdateTask: 'עדכון משימה', RunTzintuk: 'הפעלת צינתוק',
 };
 
 // פעולות שחוזרות כל כמה שניות – לא נרשמות ביומן בכלל
-const NEVER_LOG = new Set(['GetIncomingCalls', 'GetCustomerData', 'MFASession', 'GetSession']);
+const NEVER_LOG = new Set(['GetIncomingCalls', 'GetCustomerData']);
 
 // קריאות שקורות בכל טעינת עמוד – נרשמות פעם אחת לכל משתמש בכל 10 דקות, כדי שהיומן לא יוצף
 async function shouldLogRead(env, ctx, action, target) {
@@ -63,7 +61,7 @@ function yemotTarget(params) {
 
 // הרשאות לפעולות שאינן על קבצים
 function pathlessPermission(method, params) {
-  if (['GetIncomingCalls', 'GetCustomerData', 'MFASession', 'GetSession'].includes(method)) return null; // לכל משתמש מחובר
+  if (['GetIncomingCalls', 'GetCustomerData'].includes(method)) return null; // לכל משתמש מחובר
   if (['GetTasks', 'GetTasksData', 'GetTasksLogs'].includes(method)) return 'tzintuk_view';
   if (method === 'TzintukimListManagement') return /^get/i.test(params.action || '') ? 'tzintuk_view' : 'tzintuk_edit';
   if (method === 'UpdateTask' || method === 'RunTzintuk') return 'tzintuk_edit';
@@ -156,7 +154,7 @@ export async function proxyYemot(request, env, ctx, method) {
   });
 }
 
-// בדיקת חיבור (לממשק החדש ולדף הניהול): ok | mfa | expired | error
+// בדיקת הטוקן – רק בדף הניהול (ליד שדה הטוקן): ok | mfa | expired | error
 export async function connectionStatus(env) {
   const cfg = await getConfig(env);
   if (!cfg.yemot_token) return { status: 'expired', ok: false, message: 'לא הוגדר טוקן' };

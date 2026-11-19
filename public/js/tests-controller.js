@@ -179,8 +179,7 @@ const testsController = {
         
         if (!statusText || !toggleBtn || !container) return;
         
-        try {
-            const token = auth.getToken();
+        try {
             const response = await fetch(`${auth.API_BASE}/GetTextFile?what=ivr2:/1/1/ext.ini`);
             if (!response.ok) throw new Error('Network response was not ok');
             const text = await response.text();
@@ -253,8 +252,7 @@ const testsController = {
 
     // פונקציה לשינוי הסטטוס
     toggleTestStatus: async function(action) {
-        const value = action === 'block' ? '2019-07-09-18-52-30' : 'no';
-        const token = auth.getToken();
+        const value = action === 'block' ? '2019-07-09-18-52-30' : 'no';
         const apiUrl = `${auth.API_BASE}/UpdateExtension?path=ivr2:/1/1&enter_foldar_end_time=${value}`;
         
         const toggleBtn = document.getElementById('test-status-toggle-btn');

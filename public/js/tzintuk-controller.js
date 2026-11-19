@@ -71,9 +71,7 @@ const tzintukController = {
 
     // פונקציית עזר כללית לקריאות API
     // הבקרים הפנימיים ישתמשו בפונקציה זו
-    apiCall: async function(endpoint, params = {}, method = 'GET') {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    apiCall: async function(endpoint, params = {}, method = 'GET') {
         
         const queryString = new URLSearchParams(params).toString();
         const apiUrl = `${auth.API_BASE}/${endpoint}?${queryString}`;

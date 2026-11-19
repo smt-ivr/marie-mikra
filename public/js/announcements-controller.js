@@ -362,9 +362,7 @@ const announcementsController = {
     },
 
     // פונקציה מתוקנת: קריאת טקסט עם פרמטר זמן
-    apiGetTextFile: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    apiGetTextFile: async function(path) {
         // --- כאן בוצע התיקון ---
         const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(path)}&_=${new Date().getTime()}`;
         const response = await fetch(apiUrl);
@@ -374,9 +372,7 @@ const announcementsController = {
         return result.contents || "";
     },
 
-    apiUploadTextFile: async function(path, content) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    apiUploadTextFile: async function(path, content) {
         const apiUrl = `${auth.API_BASE}/UploadTextFile`;
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -388,9 +384,7 @@ const announcementsController = {
         if (result.responseStatus !== 'OK') throw new Error(result.message);
     },
 
-    fetchDirectoryData: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    fetchDirectoryData: async function(path) {
         const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
@@ -454,9 +448,7 @@ const announcementsController = {
             container.innerHTML = `<p class="info-message"><i class="fas fa-info-circle"></i> אין הודעות להצגה.</p>`;
             return;
         }
-
-        const token = auth.getToken();
-        if (!token) return;
+
 
         let listHtml = filteredList.map(msg => {
             const audioPlayer = msg.audioPath 
@@ -556,8 +548,7 @@ const announcementsController = {
         this.modalOverlay.classList.remove('visible');
     },
     
-    showPopup: function(message) {
-        const token = auth.getToken();
+    showPopup: function(message) {
         const audioPlayer = message.audioPath
             ? `<div class="audio-player-wrapper"><audio controls controlslist="nodownload" src="${auth.API_BASE}/DownloadFile?path=${encodeURIComponent(message.audioPath)}"></audio></div>`
             : '';

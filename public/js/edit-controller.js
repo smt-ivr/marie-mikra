@@ -75,8 +75,7 @@ const editController = {
         }
     },
 
-    fetchFileContent: async function(path) {
-        const token = auth.getToken();
+    fetchFileContent: async function(path) {
         const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(path)}&_t=${new Date().getTime()}`;
         const res = await fetch(apiUrl);
         const json = await res.json();
@@ -267,8 +266,7 @@ const editController = {
         }
     },
 
-    checkActiveCalls: async function() {
-        const token = auth.getToken();
+    checkActiveCalls: async function() {
         const url = `${auth.API_BASE}/GetIncomingCalls`;
         
         const res = await fetch(url);
@@ -382,8 +380,7 @@ const editController = {
 
             let newContent = newLines.join('\r\n');
             if (newContent.length > 0) newContent += '\r\n'; 
-
-            const token = auth.getToken();
+
             const uploadRes = await fetch(`${auth.API_BASE}/UploadTextFile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -448,8 +445,7 @@ const editController = {
             // שמירה חזרה לשרת
              let newContent = newLines.join('\r\n');
              if (newLines.length > 0) newContent += '\r\n';
-             
-             const token = auth.getToken();
+             
              await fetch(`${auth.API_BASE}/UploadTextFile`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

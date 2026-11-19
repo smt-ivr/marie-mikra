@@ -9,7 +9,6 @@ export const authState = {
   loggedIn: false,
   principal: null,   // { label, master, perms[], via }
   paths: null,
-  connection: null,  // { status: ok|mfa|expired|error, message }
   error: '',
 };
 
@@ -27,12 +26,8 @@ export async function refreshStatus() {
     const u = me.user;
     authState.loggedIn = true;
     authState.principal = { label: u.name, master: !!u.is_admin, perms: u.permissions || [], via: u.method };
-    const [cfg, conn] = await Promise.all([
-      server('config').catch(() => ({ paths: null })),
-      server('status').catch((e) => ({ status: 'error', message: e.message })),
-    ]);
+    const cfg = await server('config').catch(() => ({ paths: null }));
     authState.paths = cfg.paths;
-    authState.connection = conn;
   } catch (e) {
     authState.loggedIn = false;
     if (e.status !== 401) authState.error = e.message;
