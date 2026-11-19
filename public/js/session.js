@@ -415,8 +415,21 @@ const MsSession = (() => {
         return res;
     };
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupLogin);
-    else setupLogin();
+    // ===== מספר גרסה בקטן בתחתית (לא מפריע: שקוף ולא לוכד לחיצות) =====
+    async function showVersion() {
+        try {
+            const v = await call('GET', 'version', null, 8000);
+            const el = document.createElement('div');
+            el.className = 'mm-version';
+            const when = v.deployed_at ? new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(v.deployed_at)) : '';
+            el.textContent = `גרסה ${v.release}${when ? ` · עלתה ${when}` : ''}`;
+            el.title = [v.note, v.id ? `מזהה פריסה: ${v.id}` : ''].filter(Boolean).join('\n');
+            document.body.appendChild(el);
+        } catch (e) { /* ignore */ }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { setupLogin(); showVersion(); });
+    else { setupLogin(); showVersion(); }
 
     return {
         ready: () => readyPromise,

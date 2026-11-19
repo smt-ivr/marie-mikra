@@ -118,6 +118,16 @@ function renderShell() {
   app.querySelector('#backdrop').onclick = () => sidebar.classList.remove('open');
   sidebar.addEventListener('click', (e) => { if (e.target.closest('a')) sidebar.classList.remove('open'); });
 
+  // מספר גרסה בקטן בתחתית תפריט הצד
+  server('version').then((v) => {
+    const when = v.deployed_at ? new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(v.deployed_at)) : '';
+    const el = document.createElement('p');
+    el.className = 'credit version';
+    el.textContent = `גרסה ${v.release}${when ? ` · עלתה ${when}` : ''}`;
+    el.title = [v.note, v.id ? `מזהה פריסה: ${v.id}` : ''].filter(Boolean).join('\n');
+    app.querySelector('.sidebar-foot')?.appendChild(el);
+  }).catch(() => {});
+
   getCustomerData().then((d) => {
     const units = parseFloat(d.units || 0);
     app.querySelector('#sysinfo').innerHTML = `<strong>${esc(d.name || 'מערכת')}</strong><span dir="ltr">${esc(d.mainDid || '')}</span>
