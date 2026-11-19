@@ -1,0 +1,225 @@
+/* ============================================================
+   login.css — מסך הכניסה למערכת (זהה למסך הכניסה של מסכת של שבת)
+   סיסמה בלבד, או כניסה אוטומטית מכתובת IP מורשית, או Google.
+   כל הסגנונות כאן חלים רק על מסך הכניסה – לא על האתר עצמו.
+   ============================================================ */
+
+/* הערכים של אסיפה – רק בתוך מסך הכניסה */
+.lg-overlay {
+    --primary-color: #2563eb;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    font-size: 14px;
+    color: #334155;
+}
+.lg-overlay *, .lg-overlay *::before, .lg-overlay *::after { box-sizing: border-box; margin: 0; padding: 0; }
+.lg-overlay *:not(.fa) { font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; }
+.lg-overlay .hidden { display: none !important; }
+
+/* עד שיודעים שהמשתמש מחובר – האתר מוסתר (בלי הבהוב) */
+html.ms-auth-pending body > :not(#auth-overlay) { visibility: hidden !important; }
+body.ms-locked { overflow: hidden; }
+
+.lg-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(1200px 600px at 85% -10%, rgba(37, 99, 235, .35), transparent 60%),
+        radial-gradient(900px 500px at -10% 110%, rgba(124, 58, 237, .25), transparent 60%),
+        rgba(15, 23, 42, .72);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    transition: opacity .3s ease;
+    overflow-y: auto;
+}
+
+.lg-card {
+    width: 100%; max-width: 860px; min-height: 480px;
+    display: grid; grid-template-columns: 1fr 1.1fr;
+    background: #fff; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 30px 80px -20px rgba(2, 6, 23, .55), 0 0 0 1px rgba(255, 255, 255, .06);
+    animation: lgIn .45s cubic-bezier(.2, .9, .3, 1) both;
+}
+@keyframes lgIn { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
+
+/* ---------- צד המיתוג ---------- */
+.lg-brand {
+    position: relative;
+    display: flex; flex-direction: column; justify-content: space-between; gap: 28px;
+    padding: 36px 32px;
+    color: #e2e8f0;
+    background:
+        radial-gradient(500px 300px at 100% 0%, rgba(96, 165, 250, .28), transparent 70%),
+        linear-gradient(160deg, #1e3a8a 0%, #172554 55%, #0f172a 100%);
+}
+.lg-brand::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image: radial-gradient(rgba(255, 255, 255, .08) 1px, transparent 1px);
+    background-size: 18px 18px;
+}
+.lg-brand > * { position: relative; z-index: 1; }
+.lg-brand-top { display: flex; align-items: center; gap: 14px; }
+.lg-logo {
+    flex: none; width: 56px; height: 56px; border-radius: 14px; padding: 8px;
+    background: #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, .25);
+    display: flex; align-items: center; justify-content: center;
+}
+.lg-logo img, .lg-mobile-logo img { max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none; user-select: none; }
+.lg-brand-name { font-size: 1.3rem; font-weight: 800; color: #fff; letter-spacing: .2px; }
+.lg-brand-sub { font-size: .85rem; color: #93c5fd; margin-top: 2px; }
+.lg-features { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+.lg-features li { display: flex; align-items: center; gap: 12px; font-size: .92rem; color: #dbeafe; }
+.lg-features i {
+    flex: none; width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, .1); color: #bfdbfe; font-size: .9rem;
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+.lg-brand-foot { font-size: .78rem; color: #94a3b8; }
+
+/* ---------- צד הטופס ---------- */
+.lg-form { padding: 44px 40px; display: flex; flex-direction: column; justify-content: center; }
+.lg-mobile-logo { display: none; }
+.lg-form h1 { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.lg-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .9rem; color: var(--text-muted); line-height: 1.5;
+    margin-bottom: 26px; min-height: 22px;
+}
+.lg-status i { color: var(--primary-color); }
+
+.lg-label { font-size: .82rem; font-weight: 700; color: #334155; margin-bottom: 7px; }
+.lg-field { position: relative; }
+.lg-field-ico { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: .95rem; pointer-events: none; transition: color .2s; }
+.lg-input {
+    width: 100%; height: 50px;
+    padding: 0 44px 0 46px;
+    border: 1.5px solid var(--border-color); border-radius: 12px;
+    font-size: 1.05rem; font-weight: 600; color: #0f172a; letter-spacing: .5px;
+    background: #f8fafc; outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.lg-input::placeholder { color: #94a3b8; font-weight: 400; letter-spacing: 0; }
+.lg-input:focus { border-color: var(--primary-color); background: #fff; box-shadow: 0 0 0 4px rgba(37, 99, 235, .14); }
+.lg-field:focus-within .lg-field-ico { color: var(--primary-color); }
+.lg-input:disabled { opacity: .65; cursor: not-allowed; }
+.lg-eye {
+    position: absolute; left: 6px; top: 50%; transform: translateY(-50%);
+    width: 38px; height: 38px; border: none; background: none; border-radius: 9px;
+    color: #94a3b8; cursor: pointer; font-size: .95rem;
+}
+.lg-eye:hover { background: #f1f5f9; color: #475569; }
+
+.lg-caps { margin-top: 8px; font-size: .8rem; color: #b45309; display: flex; align-items: center; gap: 6px; }
+
+.lg-btn {
+    margin-top: 22px; width: 100%; height: 50px;
+    border: none; border-radius: 12px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 1.02rem; font-weight: 700; color: #fff;
+    background: linear-gradient(180deg, #3b82f6, #2563eb);
+    box-shadow: 0 10px 24px -10px rgba(37, 99, 235, .8), inset 0 1px 0 rgba(255, 255, 255, .18);
+    transition: transform .12s, box-shadow .2s, filter .2s;
+}
+.lg-btn:hover:not(:disabled) { filter: brightness(1.05); box-shadow: 0 14px 28px -10px rgba(37, 99, 235, .9); }
+.lg-btn:active:not(:disabled) { transform: translateY(1px); }
+.lg-btn:disabled { opacity: .7; cursor: not-allowed; }
+.lg-btn .fa-arrow-left { transition: transform .2s; }
+.lg-btn:hover:not(:disabled) .fa-arrow-left { transform: translateX(-3px); }
+
+.lg-error {
+    margin-top: 14px; padding: 11px 14px;
+    display: flex; align-items: center; gap: 8px;
+    background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+    color: #dc2626; font-size: .9rem; font-weight: 600;
+}
+#loginError:not(.hidden) { animation: shakeError .4s ease-in-out; }
+
+.lg-secure {
+    margin-top: 28px; padding-top: 18px; border-top: 1px solid #f1f5f9;
+    font-size: .78rem; color: #94a3b8; display: flex; align-items: center; gap: 7px;
+}
+.lg-secure i { color: #10b981; }
+
+/* ---------- טלפון ---------- */
+@media (max-width: 768px) {
+    .lg-overlay { padding: 0; align-items: stretch; background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; }
+    .lg-card { grid-template-columns: 1fr; max-width: none; min-height: 100%; border-radius: 0; box-shadow: none; animation: none; }
+    .lg-brand { display: none; }
+    .lg-form { padding: 48px 22px 28px; justify-content: flex-start; }
+    .lg-mobile-logo {
+        display: flex; align-items: center; justify-content: center;
+        width: 68px; height: 68px; border-radius: 18px; padding: 10px; margin: 0 auto 22px;
+        background: #fff; border: 1px solid var(--border-color); box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+    }
+    .lg-form h1 { text-align: center; font-size: 1.45rem; }
+    .lg-status { justify-content: center; text-align: center; }
+    .lg-input { font-size: 16px; }   /* מונע זום אוטומטי באייפון */
+    .lg-secure { justify-content: center; text-align: center; margin-top: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) { .lg-card, #loginError:not(.hidden) { animation: none; } }
+
+.lg-field + .lg-label { margin-top: 16px; display: block; }
+.lg-label { display: block; }
+
+/* כניסה עם Google */
+.lg-or { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: #94a3b8; font-size: .82rem; }
+.lg-or::before, .lg-or::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+.google-slot { display: flex; justify-content: center; min-height: 44px; }
+
+/* ביטול – כשנכנסים בסיסמה מעל חיבור לפי IP */
+.lg-cancel {
+    margin-top: 14px; align-self: center;
+    border: none; background: none; cursor: pointer;
+    color: #64748b; font-size: .85rem; display: flex; align-items: center; gap: 6px;
+}
+.lg-cancel:hover { color: #2563eb; text-decoration: underline; }
+
+/* ============================================================
+   הרשאות – מה שאין למשתמש הרשאה אליו מוסתר (השרת חוסם ממילא)
+   ============================================================ */
+html.ms-no-tests_view .tab-button[data-view="tests-view"],
+html.ms-no-points_view .tab-button[data-view="points-view"],
+html.ms-no-students_view .tab-button[data-view="students-view"],
+html.ms-no-times_view .tab-button[data-view="time-view"],
+html.ms-no-tzintuk_view .tab-button[data-view="tzintuk-view"],
+html.ms-no-logs_view .tab-button[data-view="logs-view"],
+html.ms-no-tests_edit #archive-test-btn,
+html.ms-no-tests_edit #edit-test-btn,
+html.ms-no-tests_edit #import-questions-btn,
+html.ms-no-tests_edit #test-status-toggle-btn,
+html.ms-no-points_edit #archive-points-btn,
+html.ms-no-points_edit #points-view .manage-points-btn,
+html.ms-no-students_edit #add-student-btn,
+html.ms-no-students_edit #students-view .actions-cell,
+html.ms-no-times_edit #save-time-settings-btn,
+html.ms-no-times_edit #add-filter-btn,
+html.ms-no-times_edit #time-view .status-actions,
+html.ms-no-tzintuk_edit #manual-run-tzintuk-btn,
+html.ms-no-tzintuk_edit #tzintuk-view .edit-task-btn,
+html.ms-no-new_site #mmBarNew,
+html.ms-no-admin #mmBarAdmin { display: none !important; }
+
+/* ============================================================
+   פס משתמש קטן בפינה: שם, מעבר לממשק החדש, ניהול, יציאה
+   (צף מעל האתר – לא משנה את העיצוב או את המיקום של שום דבר באתר)
+   ============================================================ */
+.mm-userbar {
+    position: fixed; left: 12px; bottom: 12px; z-index: 9000;
+    display: flex; align-items: center; gap: 2px;
+    background: rgba(255, 255, 255, .96); border: 1px solid #dee2e6; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .12); padding: 3px;
+    font: 500 13px system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; color: #343a40;
+    direction: rtl;
+}
+.mm-userbar .mm-name { padding: 0 10px 0 6px; display: flex; align-items: center; gap: 6px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.mm-userbar .mm-name i { color: #007bff; }
+.mm-userbar a, .mm-userbar button {
+    display: inline-flex; align-items: center; gap: 5px; border: 0; background: transparent; cursor: pointer;
+    color: #495057; text-decoration: none; font: inherit; padding: 6px 10px; border-radius: 999px; white-space: nowrap;
+}
+.mm-userbar a:hover, .mm-userbar button:hover { background: #e9ecef; color: #0056b3; }
+.mm-userbar .mm-sep { width: 1px; height: 18px; background: #dee2e6; }
+@media (max-width: 600px) { .mm-userbar .mm-label { display: none; } .mm-userbar .mm-name { max-width: 110px; } }
+@media print { .mm-userbar { display: none !important; } }

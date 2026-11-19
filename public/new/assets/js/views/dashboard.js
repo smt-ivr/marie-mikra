@@ -7,7 +7,7 @@ import { getLockState } from './tests/test-actions.js';
 import { parseTimes, timeStatus } from './times.js';
 import { parseStudentsMap, parsePoints } from './points.js';
 import { liveCalls } from '../widgets/calls.js';
-import { can, isMaster } from '../core/auth.js';
+import { can, isMaster, ADMIN_URL } from '../core/auth.js';
 
 const card = (id, href, icon, title) => `
   <a class="dash-card" id="${id}" href="${href}">
@@ -27,7 +27,7 @@ export function mount(el) {
       ${can('points_view') ? card('d-points', '#/points', 'fa-star', 'נקודות') : ''}
       ${can('students_view') ? card('d-students', '#/students', 'fa-users', 'תלמידים') : ''}
       ${card('d-calls', '#/', 'fa-phone-volume', 'שיחות פעילות')}
-      ${card('d-sys', isMaster() ? '#/admin' : '#/', 'fa-server', 'פרטי מערכת')}
+      ${card('d-sys', isMaster() ? ADMIN_URL : '#/', 'fa-server', 'פרטי מערכת')}
     </div>`;
   const set = (id, html) => { const b = el.querySelector(`#${id} .dash-card-body`); if (b) b.innerHTML = html; };
   const fail = (id, e) => set(id, `<span class="muted small"><i class="fa-solid fa-triangle-exclamation"></i> ${esc(e?.message || 'לא זמין')}</span>`);

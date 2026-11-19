@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>ניהול – מארי מקרא</title>
+<link href="https://smti.uk/smt.png" rel="icon" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+  :root { --primary:#031b4f; --accent:#2563eb; --bg:#f4f6fa; --card:#fff; --border:#dde2ea; --muted:#6c757d; --danger:#c62828; --ok:#2e7d32; --warn:#8a5a00; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Rubik',Arial,sans-serif; background:var(--bg); color:#1d2433; }
+  header { background:var(--primary); color:#fff; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  header h1 { margin:0; font-size:1.15rem; font-weight:500; }
+  header .who { font-size:.9rem; opacity:.9; display:flex; gap:12px; align-items:center; }
+  header a { color:#cfe0ff; text-decoration:none; }
+  nav.tabs { display:flex; gap:4px; padding:0 16px; background:#fff; border-bottom:1px solid var(--border); overflow-x:auto; }
+  nav.tabs button { background:none; border:none; border-bottom:3px solid transparent; color:var(--muted); padding:12px 14px; font:inherit; cursor:pointer; white-space:nowrap; border-radius:0; }
+  nav.tabs button.active { color:var(--primary); border-bottom-color:var(--primary); font-weight:500; }
+  main { max-width:1150px; margin:0 auto; padding:16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:16px; }
+  .card h2 { margin:0 0 4px; font-size:1.1rem; color:var(--primary); }
+  .card .sub { margin:0 0 14px; color:var(--muted); font-size:.88rem; }
+  .center { text-align:center; padding:60px 16px; }
+  input, select, textarea { width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:6px; font:inherit; background:#fff; color:inherit; }
+  textarea { min-height:90px; resize:vertical; }
+  input:focus, select:focus, textarea:focus { outline:2px solid #c9dafc; border-color:var(--accent); }
+  button { font:inherit; cursor:pointer; border-radius:6px; padding:8px 16px; border:1px solid var(--primary); background:var(--primary); color:#fff; }
+  button.secondary { background:#fff; color:var(--primary); }
+  button.danger { background:#fff; color:var(--danger); border-color:var(--danger); }
+  button.small { padding:4px 10px; font-size:.85rem; }
+  button:disabled { opacity:.6; cursor:default; }
+  .msg { margin-top:10px; font-size:.9rem; min-height:1.2em; }
+  .msg.err { color:var(--danger); } .msg.ok { color:var(--ok); }
+  .toolbar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+  .filters { display:flex; gap:8px; flex-wrap:wrap; }
+  .filters > * { width:auto; min-width:150px; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { text-align:right; padding:9px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+  th { color:var(--muted); font-weight:500; font-size:.82rem; white-space:nowrap; }
+  td.nowrap { white-space:nowrap; }
+  .tag { display:inline-block; padding:2px 8px; border-radius:12px; font-size:.76rem; background:#eef2f8; color:var(--primary); margin:1px 0 1px 4px; white-space:nowrap; }
+  .tag.admin { background:#fff4d6; color:var(--warn); } .tag.off { background:#fde7e7; color:var(--danger); }
+  .tag.ok { background:#e6f4ea; color:var(--ok); } .tag.write { background:#fff1e0; color:#9a4d00; }
+  .tag.cleanup { background:#efe7ff; color:#5b2bb5; } .tag.auth { background:#e6f0ff; color:#1d4ed8; }
+  .actions { display:flex; gap:6px; justify-content:flex-end; flex-wrap:wrap; }
+  .ltr { direction:ltr; unicode-bidi:embed; font-family:ui-monospace,monospace; font-size:.88em; }
+  .details { color:var(--muted); font-size:.82rem; max-width:420px; word-break:break-word; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .grid .full { grid-column:1 / -1; }
+  label.f { display:block; font-size:.85rem; color:var(--muted); margin-bottom:4px; }
+  .check { display:flex; align-items:center; gap:8px; font-size:.92rem; }
+  .check input { width:auto; }
+  .hint { font-size:.8rem; color:var(--muted); margin-top:4px; }
+  .secret-state { font-size:.8rem; margin-top:4px; }
+  .secret-state.set { color:var(--ok); } .secret-state.unset { color:var(--danger); }
+  fieldset { border:1px solid var(--border); border-radius:8px; padding:14px; margin:0 0 14px; }
+  legend { padding:0 6px; color:var(--primary); font-weight:500; }
+  .more { text-align:center; margin-top:12px; }
+  dialog { border:none; border-radius:12px; padding:0; width:min(560px, calc(100% - 32px)); box-shadow:0 20px 60px rgba(0,0,0,.25); }
+  dialog::backdrop { background:rgba(3,27,79,.35); }
+  .dlg-head { background:var(--primary); color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+  .dlg-head h3 { margin:0; font-size:1rem; font-weight:500; }
+  .dlg-head button { background:none; border:none; font-size:1.3rem; padding:0 4px; }
+  .dlg-body { padding:16px; max-height:70vh; overflow:auto; }
+  .dlg-foot { padding:12px 16px; display:flex; gap:8px; border-top:1px solid var(--border); background:#f8f9fb; }
+  .hidden { display:none !important; }
+  .perm-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+  .ip-row { display:grid; grid-template-columns:1.2fr 1fr auto; gap:8px; margin-bottom:8px; }
+
+  @media (max-width:700px) { .perm-grid { grid-template-columns:1fr; } }
+  .empty { color:var(--muted); text-align:center; padding:20px; }
+  @media (max-width:700px) {
+    .grid { grid-template-columns:1fr; }
+    thead { display:none; }
+    tr { display:block; border-bottom:1px solid var(--border); padding:8px 0; }
+    td { display:block; border:none; padding:3px 0; }
+    .actions { justify-content:flex-start; }
+    .filters > * { min-width:0; flex:1 1 140px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1><i class="fa fa-cogs"></i> ניהול – מארי מקרא</h1>
+  <div class="who"><span id="who"></span><a href="/marie-mikra/"><i class="fa fa-arrow-right"></i> לאתר</a></div>
+</header>
+
+<div id="gate" class="center">
+  <p id="gateMsg"><i class="fa fa-spinner fa-spin"></i> בודק הרשאה…</p>
+  <a id="gateLink" class="hidden" href="/marie-mikra/"><button>כניסה למערכת</button></a>
+</div>
+
+<div id="app" class="hidden">
+  <nav class="tabs" role="tablist">
+    <button data-tab="users" class="active"><i class="fa fa-users"></i> משתמשים</button>
+    <button data-tab="actions"><i class="fa fa-list"></i> יומן פעולות</button>
+    <button data-tab="logins"><i class="fa fa-sign-in"></i> יומן כניסות</button>
+    <button data-tab="settings"><i class="fa fa-sliders"></i> הגדרות</button>
+  </nav>
+  <main>
+    <!-- משתמשים -->
+    <section id="tab-users">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>משתמשים</h2><p class="sub">לכל משתמש: שם ומייל, ובתוכו סיסמה, כתובות IP (כניסה אוטומטית) והרשאות. עם המייל אפשר להיכנס גם עם Google</p></div>
+          <button id="addBtn"><i class="fa fa-plus"></i> משתמש חדש</button>
+        </div>
+        <table>
+          <thead><tr><th>שם</th><th>דרכי כניסה</th><th>הרשאות</th><th>כניסה אחרונה</th><th></th></tr></thead>
+          <tbody id="usersRows"></tbody>
+        </table>
+        <div class="msg" id="usersMsg"></div>
+      </div>
+    </section>
+
+    <!-- יומן פעולות -->
+    <section id="tab-actions" class="hidden">
+      <div class="card">
+        <div class="toolbar">
+          <div><h2>יומן פעולות</h2><p class="sub">כל פעולה במערכת: כניסות, שינויים בקבצים, צינתוקים, עריכת ציונים, ניהול, וניקוי דפדפנים. קריאות שחוזרות על עצמן נרשמות פעם ב-10 דקות</p></div>
+          <div class="filters">
+            <select id="fKind">
+              <option value="">כל הסוגים</option>
+              <option value="write">שינויים</option>
+              <option value="read">קריאות</option>
+              <option value="admin">ניהול</option>
+              <option value="auth">כניסה ויציאה</option>
+              <option value="cleanup">ניקוי דפדפן</option>
+            </select>
+            <select id="fAccount"><option value="">כל המשתמשים</option></select>
+            <input id="fQuery" placeholder="חיפוש…">
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>זמן</th><th>משתמש</th><th>סוג</th><th>פעולה</th><th>על</th><th>פרטים</th><th>תוצאה</th></tr></thead>
+          <tbody id="actionsRows"></tbody>
+        </table>
+        <div class="more"><button class="secondary hidden" id="actionsMore">עוד</button></div>
+      </div>
+    </section>
+
+    <!-- יומן כניסות -->
+    <section id="tab-logins" class="hidden">
+      <div class="card">
+        <h2>יומן כניסות</h2>
+        <p class="sub">כל ניסיון כניסה, כולל ניסיונות שנכשלו. אחרי 8 ניסיונות כושלים מאותה כתובת – חסימה לרבע שעה</p>
+        <table>
+          <thead><tr><th>זמן</th><th>תוצאה</th><th>דרך</th><th>פרטים</th><th>משתמש</th><th>IP</th><th>דפדפן</th></tr></thead>
+          <tbody id="loginsRows"></tbody>
+        </table>
+        <div class="more"><button class="secondary hidden" id="loginsMore">עוד</button></div>
+      </div>
+    </section>
+
+    <!-- הגדרות -->
+    <section id="tab-settings" class="hidden">
+      <form id="settingsForm" class="card">
+        <h2>הגדרות המערכת</h2>
+        <p class="sub">הטוקנים והמפתחות שמורים במסד בשרת בלבד. הם לא נשלחים לדפדפן. שדה סודי ריק = ללא שינוי</p>
+
+        <fieldset>
+          <legend><i class="fa fa-plug"></i> חיבור למערכת</legend>
+          <div id="connState" class="secret-state" style="margin:0 0 10px"></div>
+          <label class="f" for="sYemot">טוקן API</label>
+          <input id="sYemot" class="ltr" autocomplete="off" placeholder="WU1BUElL.apik_…">
+          <div class="secret-state" id="sYemotState"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><i class="fa fa-folder-open"></i> כתובות במערכת</legend>
+          <p class="hint" style="margin:0 0 12px">הכתובות שהאתר עובד איתן. אם מעבירים שלוחה או קובץ במערכת – מעדכנים כאן, והאתר ממשיך לעבוד.
+            האתר יכול לגשת רק לכתובות האלה (וכל מה שמתחתן); כל כתובת אחרת נחסמת ונרשמת ביומן. ההרשאות של כל משתמש נבדקות לפי התחום של הכתובת</p>
+          <div id="pathFields" class="grid"></div>
+          <div style="margin-top:10px"><button type="button" class="secondary small" id="resetPathsBtn"><i class="fa fa-undo"></i> שחזור ברירת המחדל</button></div>
+        </fieldset>
+
+
+        <fieldset>
+          <legend><i class="fa fa-google"></i> כניסה עם Google</legend>
+          <label class="check"><input type="checkbox" id="sGoogleOn"> לאפשר כניסה עם Google (לפי המייל של המשתמש)</label>
+          <div style="margin-top:10px"><label class="f" for="sGoogleId">Client ID</label><input id="sGoogleId" class="ltr" placeholder="….apps.googleusercontent.com"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend><i class="fa fa-envelope"></i> מייל (Resend)</legend>
+          <div class="grid">
+            <div><label class="f" for="sResend">מפתח Resend</label><input id="sResend" class="ltr" autocomplete="off" placeholder="re_…"><div class="secret-state" id="sResendState"></div></div>
+            <div><label class="f" for="sFrom">שולח</label><input id="sFrom"></div>
+            <div class="full"><label class="f" for="sSite">כתובת האתר (בכפתור שבמייל)</label><input id="sSite" class="ltr"></div>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap">
+            <input id="testTo" type="email" class="ltr" placeholder="מייל לבדיקה" style="max-width:280px">
+            <button type="button" class="secondary" id="testMailBtn">שליחת מייל בדיקה</button>
+          </div>
+        </fieldset>
+
+
+        <fieldset>
+          <legend><i class="fa fa-paper-plane"></i> מייל פתיחה</legend>
+          <div class="grid">
+            <div class="full"><label class="f" for="wSubject">נושא</label><input id="wSubject"></div>
+            <div class="full"><label class="f" for="wTitle">כותרת</label><input id="wTitle"></div>
+            <div class="full"><label class="f" for="wBody">גוף ההודעה</label><textarea id="wBody"></textarea><div class="hint">אפשר להשתמש ב-{שם} {מייל}</div></div>
+            <div><label class="f" for="wButton">טקסט הכפתור</label><input id="wButton"></div>
+            <div><label class="f" for="wNote">הערה בתחתית</label><input id="wNote"></div>
+          </div>
+          <div style="margin-top:12px"><button type="button" class="secondary" id="previewBtn"><i class="fa fa-eye"></i> תצוגה מקדימה</button></div>
+        </fieldset>
+
+        <button type="submit" id="saveSettingsBtn"><i class="fa fa-save"></i> שמירת הגדרות</button>
+        <div class="msg" id="settingsMsg"></div>
+      </form>
+    </section>
+  </main>
+</div>
+
+<!-- משתמש -->
+<dialog id="userDlg" style="width:min(640px, calc(100% - 32px))">
+  <form id="userForm" method="dialog">
+    <div class="dlg-head"><h3 id="userTitle">משתמש</h3><button type="button" data-close aria-label="סגירה">×</button></div>
+    <div class="dlg-body">
+      <div class="grid">
+        <div><label class="f" for="uName">שם</label><input id="uName" required></div>
+        <div><label class="f" for="uEmail">מייל (לכניסה עם Google ולמייל פתיחה)</label><input id="uEmail" type="email" class="ltr"></div>
+      </div>
+
+      <fieldset style="margin-top:14px">
+        <legend><i class="fa fa-key"></i> סיסמה</legend>
+        <label class="f" for="uPass" id="uPassLabel">סיסמה</label>
+        <input id="uPass" type="text" class="ltr" autocomplete="new-password">
+        <div class="hint" id="uPassHint"></div>
+        <label class="check hidden" id="uRemovePassWrap" style="margin-top:8px"><input type="checkbox" id="uRemovePass"> להסיר את הסיסמה (כניסה רק לפי IP / Google)</label>
+      </fieldset>
+
+      <fieldset>
+        <legend><i class="fa fa-desktop"></i> כתובות IP (כניסה אוטומטית)</legend>
+        <div id="ipRows"></div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+          <button type="button" class="secondary small" id="addIpBtn"><i class="fa fa-plus"></i> כתובת</button>
+          <button type="button" class="secondary small" id="addMyIpBtn"><i class="fa fa-map-marker"></i> הכתובת שלי (<span id="myIp" class="ltr"></span>)</button>
+        </div>
+        <div class="hint">מחשב שנכנס מאחת הכתובות האלה נכנס אוטומטית כמשתמש הזה</div>
+      </fieldset>
+
+      <fieldset>
+        <legend><i class="fa fa-lock"></i> הרשאות</legend>
+        <div id="permBoxes" class="perm-grid"></div>
+        <label class="check" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border)"><input type="checkbox" id="uAdmin"> <b>ניהול המערכת</b> – דף הניהול וכל ההרשאות</label>
+      </fieldset>
+
+      <label class="check"><input type="checkbox" id="uActive" checked> פעיל</label>
+      <div class="msg err" id="userMsg"></div>
+    </div>
+    <div class="dlg-foot"><button type="submit" id="userSave">שמירה</button><button type="button" class="secondary" data-close>ביטול</button></div>
+  </form>
+</dialog>
+
+<!-- מייל פתיחה -->
+<dialog id="welcomeDlg">
+  <form id="welcomeForm" method="dialog">
+    <div class="dlg-head"><h3>שליחת מייל פתיחה</h3><button type="button" data-close aria-label="סגירה">×</button></div>
+    <div class="dlg-body">
+      <p id="welcomeWho" style="margin-top:0"></p>
+      <label class="f" for="wTo">אל</label><input id="wTo" type="email" class="ltr" required>
+      <div style="margin-top:10px"><label class="f" for="wPass">סיסמה לשליחה במייל (רשות)</label><input id="wPass" type="text" class="ltr" autocomplete="off">
+        <div class="hint">הסיסמאות שמורות מוצפנות ולא ניתן לשלוף אותן. אם תזין כאן סיסמה – היא תיכנס למייל וגם תוגדר כסיסמה החדשה של המשתמש.</div></div>
+      <div class="msg err" id="welcomeMsg"></div>
+    </div>
+    <div class="dlg-foot"><button type="submit" id="welcomeSend"><i class="fa fa-paper-plane"></i> שליחה</button><button type="button" class="secondary" data-close>ביטול</button></div>
+  </form>
+</dialog>
+
+<!-- תצוגה מקדימה -->
+<dialog id="previewDlg" style="width:min(680px, calc(100% - 32px))">
+  <div class="dlg-head"><h3 id="previewSubject">תצוגה מקדימה</h3><button type="button" data-close aria-label="סגירה">×</button></div>
+  <iframe id="previewFrame" title="תצוגה מקדימה" style="width:100%; height:65vh; border:0; background:#f1f5f9"></iframe>
+</dialog>
+
+<script>
+const API = '/marie-mikra/api/';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+let me = null, accounts = [], editing = null, myIp = '', settings = null;
+
+async function api(method, path, body) {
+  const res = await fetch(API + path, {
+    method, credentials: 'same-origin',
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => null);
+  if (!data || !data.ok) {
+    const e = new Error(data && data.error ? data.error.message : 'שגיאת תקשורת');
+    e.status = res.status;
+    if (res.status === 401) gate('פג תוקף הכניסה. יש להיכנס מחדש באתר.', true);
+    throw e;
+  }
+  return data.data;
+}
+
+function gate(text, showLink) {
+  $('app').classList.add('hidden'); $('gate').classList.remove('hidden');
+  $('gateMsg').textContent = text; $('gateLink').classList.toggle('hidden', !showLink);
+}
+
+function flash(id, text, isErr = false) {
+  const m = $(id); m.textContent = text; m.className = 'msg ' + (isErr ? 'err' : 'ok');
+  if (!isErr) setTimeout(() => { if (m.textContent === text) m.textContent = ''; }, 4000);
+}
+
+document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
+
+// ===== לשוניות =====
+const loaded = {};
+document.querySelectorAll('nav.tabs button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('nav.tabs button').forEach((x) => x.classList.toggle('active', x === b));
+  document.querySelectorAll('main > section').forEach((s) => s.classList.toggle('hidden', s.id !== 'tab-' + b.dataset.tab));
+  const t = b.dataset.tab;
+  if (t === 'actions') loadActions(true);
+  if (t === 'logins' && !loaded.logins) loadLogins(true);
+  if (t === 'settings' && !loaded.settings) loadSettings();
+}));
+
+// ===== משתמשים =====
+let PERMS = {};
+const PERM_ORDER = ['tests_view', 'tests_edit', 'points_view', 'points_edit', 'students_view', 'students_edit', 'times_view', 'times_edit', 'tzintuk_view', 'tzintuk_edit', 'logs_view', 'new_site'];
+
+async function loadUsers() {
+  const r = await api('GET', 'admin/accounts');
+  accounts = r.accounts; PERMS = r.permissions || {};
+  $('usersRows').innerHTML = accounts.map((a) => {
+    const ways = [
+      a.has_password ? '<span class="tag">סיסמה</span>' : '',
+      ...a.ips.map((x) => `<span class="tag" title="${esc(x.label)}">IP <span class="ltr">${esc(x.ip)}</span></span>`),
+      a.email ? '<span class="tag">Google</span>' : '',
+    ].join('') || '<span class="tag off">אין</span>';
+    const perms = a.is_admin ? '<span class="tag admin">ניהול המערכת (הכול)</span>'
+      : (a.permissions.map((p) => `<span class="tag">${esc(PERMS[p] || p)}</span>`).join('') || '<span class="tag off">אין הרשאות</span>');
+    return `
+    <tr>
+      <td><strong>${esc(a.name)}</strong>${a.id === me.id ? ' <span class="tag">אתה</span>' : ''}${a.active ? '' : ' <span class="tag off">מושבת</span>'}${a.email ? `<div class="details ltr">${esc(a.email)}</div>` : ''}</td>
+      <td>${ways}</td>
+      <td>${perms}</td>
+      <td class="nowrap">${esc(a.last_used_at || '—')}</td>
+      <td class="actions">
+        <button class="secondary small" data-welcome="${a.id}" title="שליחת מייל פתיחה"><i class="fa fa-paper-plane"></i></button>
+        <button class="secondary small" data-log="${a.id}" title="הפעולות של המשתמש"><i class="fa fa-list"></i></button>
+        <button class="secondary small" data-edit="${a.id}">עריכה</button>
+        ${a.id === me.id ? '' : `<button class="danger small" data-del="${a.id}">מחיקה</button>`}
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="empty">אין משתמשים</td></tr>';
+  $('fAccount').innerHTML = '<option value="">כל המשתמשים</option>' + accounts.map((a) => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
+}
+
+function addIpRow(ip = '', label = '') {
+  const row = document.createElement('div');
+  row.className = 'ip-row';
+  row.innerHTML = `<input class="ltr ip-val" placeholder="1.2.3.4" value="${esc(ip)}">
+    <input class="ip-label" placeholder="תיאור (למשל: מחשב משרד)" value="${esc(label)}">
+    <button type="button" class="danger small" title="הסרה"><i class="fa fa-times"></i></button>`;
+  row.querySelector('button').onclick = () => row.remove();
+  $('ipRows').appendChild(row);
+  return row;
+}
+
+function syncAdmin() {
+  const admin = $('uAdmin').checked;
+  document.querySelectorAll('#permBoxes input').forEach((i) => { i.disabled = admin; if (admin) i.checked = true; });
+}
+
+function openUser(a) {
+  editing = a || null;
+  $('userTitle').textContent = a ? 'עריכת משתמש' : 'משתמש חדש';
+  $('userMsg').textContent = '';
+  $('uName').value = a?.name || '';
+  $('uEmail').value = a?.email || '';
+  $('uPass').value = '';
+  $('uPassLabel').textContent = a?.has_password ? 'סיסמה חדשה' : 'סיסמה';
+  $('uPassHint').textContent = a?.has_password
+    ? 'יש סיסמה. השאר ריק כדי לא לשנות'
+    : 'לפחות 6 תווים. הסיסמה מזהה את המשתמש, ולכן צריכה להיות שונה משל משתמשים אחרים. אפשר להשאיר ריק אם נכנסים רק לפי IP / Google';
+  $('uRemovePass').checked = false;
+  $('uRemovePassWrap').classList.toggle('hidden', !a?.has_password);
+  $('ipRows').innerHTML = '';
+  (a?.ips || []).forEach((x) => addIpRow(x.ip, x.label));
+  $('myIp').textContent = myIp;
+  const have = new Set(a ? a.permissions : PERM_ORDER);
+  $('permBoxes').innerHTML = PERM_ORDER.map((p) => `<label class="check"><input type="checkbox" value="${p}" ${have.has(p) ? 'checked' : ''}> ${esc(PERMS[p] || p)}</label>`).join('');
+  $('uAdmin').checked = !!a?.is_admin;
+  syncAdmin();
+  $('uActive').checked = a ? a.active : true;
+  $('userDlg').showModal();
+}
+
+$('uAdmin').onchange = syncAdmin;
+$('addIpBtn').onclick = () => addIpRow().querySelector('input').focus();
+$('addMyIpBtn').onclick = () => {
+  if ([...document.querySelectorAll('.ip-val')].some((i) => i.value.trim() === myIp)) return;
+  addIpRow(myIp, '');
+};
+$('addBtn').onclick = () => openUser(null);
+
+$('userForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    name: $('uName').value,
+    email: $('uEmail').value,
+    active: $('uActive').checked,
+    is_admin: $('uAdmin').checked,
+    permissions: [...document.querySelectorAll('#permBoxes input:checked')].map((i) => i.value),
+    ips: [...document.querySelectorAll('.ip-row')].map((r) => ({ ip: r.querySelector('.ip-val').value.trim(), label: r.querySelector('.ip-label').value.trim() })).filter((x) => x.ip),
+  };
+  if ($('uPass').value) body.password = $('uPass').value;
+  else if ($('uRemovePass').checked) body.remove_password = true;
+  $('userSave').disabled = true; $('userMsg').textContent = '';
+  try {
+    if (editing) await api('PUT', 'admin/accounts/' + editing.id, body);
+    else await api('POST', 'admin/accounts', body);
+    $('userDlg').close(); await loadUsers(); flash('usersMsg', 'נשמר');
+  } catch (err) { $('userMsg').textContent = err.message; }
+  $('userSave').disabled = false;
+});
+
+$('usersRows').addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  const find = (id) => accounts.find((a) => a.id == id);
+  if (b.dataset.edit) openUser(find(b.dataset.edit));
+  if (b.dataset.log) {
+    $('fAccount').value = b.dataset.log; $('fKind').value = ''; $('fQuery').value = '';
+    document.querySelector('nav.tabs button[data-tab="actions"]').click();
+  }
+  if (b.dataset.welcome) openWelcome(find(b.dataset.welcome));
+  if (b.dataset.del) {
+    const a = find(b.dataset.del);
+    if (!confirm(`למחוק את "${a.name}"?`)) return;
+    try { await api('DELETE', 'admin/accounts/' + a.id); await loadUsers(); flash('usersMsg', 'המשתמש נמחק'); }
+    catch (err) { flash('usersMsg', err.message, true); }
+  }
+});
+
+// ===== מייל פתיחה =====
+let welcomeFor = null;
+function openWelcome(a) {
+  welcomeFor = a;
+  $('welcomeWho').textContent = a.name;
+  $('wTo').value = a.email || ''; $('wPass').value = ''; $('welcomeMsg').textContent = '';
+  $('welcomeDlg').showModal();
+}
+$('welcomeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('welcomeSend').disabled = true; $('welcomeMsg').textContent = '';
+  try {
+    const pass = $('wPass').value;
+    if (pass) await api('PUT', 'admin/accounts/' + welcomeFor.id, { password: pass });
+    const r = await api('POST', `admin/accounts/${welcomeFor.id}/welcome`, { to: $('wTo').value, password: pass });
+    $('welcomeDlg').close(); flash('usersMsg', 'המייל נשלח אל ' + r.to);
+  } catch (err) { $('welcomeMsg').textContent = err.message; }
+  $('welcomeSend').disabled = false;
+});
+
+// ===== יומן פעולות =====
+const KIND = { read: ['קריאה', ''], write: ['שינוי', 'write'], admin: ['ניהול', 'admin'], auth: ['כניסה', 'auth'], cleanup: ['ניקוי דפדפן', 'cleanup'] };
+let actionsOffset = 0;
+function fmtDetails(d) {
+  if (!d) return '';
+  try { const o = JSON.parse(d); return Object.entries(o).map(([k, v]) => `<b>${esc(k)}:</b> ${esc(v)}`).join(' · '); }
+  catch { return esc(d); }
+}
+async function loadActions(reset) {
+  if (reset) { actionsOffset = 0; $('actionsRows').innerHTML = ''; }
+  const p = new URLSearchParams({ limit: 100, offset: actionsOffset });
+  if ($('fKind').value) p.set('kind', $('fKind').value);
+  if ($('fAccount').value) p.set('account', $('fAccount').value);
+  if ($('fQuery').value.trim()) p.set('q', $('fQuery').value.trim());
+  const r = await api('GET', 'admin/action-log?' + p);
+  actionsOffset += r.rows.length;
+  $('actionsRows').insertAdjacentHTML('beforeend', r.rows.map((x) => {
+    const [label, cls] = KIND[x.kind] || [x.kind, ''];
+    const okStatus = /^(ok|OK|200|נקי|נמחק)/.test(x.status || '');
+    return `<tr>
+      <td class="nowrap">${esc(x.created_at)}</td>
+      <td>${esc(x.account_name || '—')}<div class="details ltr">${esc(x.ip || '')}</div></td>
+      <td><span class="tag ${cls}">${label}</span></td>
+      <td>${esc(x.action)}</td>
+      <td class="details">${esc(x.target || '')}</td>
+      <td class="details">${fmtDetails(x.details)}</td>
+      <td class="details">${x.status ? `<span class="tag ${okStatus ? 'ok' : 'off'}">${esc(x.status)}</span>` : ''}</td>
+    </tr>`;
+  }).join(''));
+  if (!actionsOffset) $('actionsRows').innerHTML = '<tr><td colspan="7" class="empty">אין פעולות להצגה</td></tr>';
+  $('actionsMore').classList.toggle('hidden', !r.more);
+}
+let qTimer;
+$('fKind').onchange = $('fAccount').onchange = () => loadActions(true);
+$('fQuery').oninput = () => { clearTimeout(qTimer); qTimer = setTimeout(() => loadActions(true), 350); };
+$('actionsMore').onclick = () => loadActions(false);
+
+// ===== יומן כניסות =====
+let loginsOffset = 0;
+const METHOD = { password: 'סיסמה', user: 'סיסמה', ip: 'IP', google: 'Google' };
+async function loadLogins(reset) {
+  loaded.logins = true;
+  if (reset) { loginsOffset = 0; $('loginsRows').innerHTML = ''; }
+  const r = await api('GET', `admin/login-log?limit=100&offset=${loginsOffset}`);
+  loginsOffset += r.rows.length;
+  $('loginsRows').insertAdjacentHTML('beforeend', r.rows.map((x) => `<tr>
+    <td class="nowrap">${esc(x.created_at)}</td>
+    <td>${x.success ? '<span class="tag ok">הצליח</span>' : '<span class="tag off">נכשל</span>'}</td>
+    <td>${esc(METHOD[x.method] || x.method || '')}</td>
+    <td>${esc(x.username || '')}</td>
+    <td>${esc(x.display_name || '—')}</td>
+    <td class="ltr nowrap">${esc(x.ip || '')}</td>
+    <td class="details">${esc((x.user_agent || '').slice(0, 90))}</td></tr>`).join(''));
+  if (!loginsOffset) $('loginsRows').innerHTML = '<tr><td colspan="7" class="empty">אין כניסות</td></tr>';
+  $('loginsMore').classList.toggle('hidden', !r.more);
+}
+$('loginsMore').onclick = () => loadLogins(false);
+
+// ===== הגדרות =====
+function secretState(id, set, hint) {
+  const el = $(id); el.className = 'secret-state ' + (set ? 'set' : 'unset');
+  el.textContent = set ? `מוגדר (${hint})` : 'לא מוגדר';
+}
+let PATH_FIELDS = [];
+function fillPaths(fields, values) {
+  PATH_FIELDS = fields || [];
+  $('pathFields').innerHTML = PATH_FIELDS.map((f) => `
+    <div${f.hint ? ' class="full"' : ''}>
+      <label class="f" for="path_${f.key}">${esc(f.label)} <span class="tag ${f.access === 'write' ? 'write' : ''}">${f.access === 'write' ? 'קריאה ושינוי' : 'קריאה'}</span></label>
+      <input id="path_${f.key}" class="ltr" data-key="${f.key}" placeholder="${esc(f.default)}" value="${esc((values && values[f.key]) || f.default)}">
+      <div class="hint">${f.type === 'folder' ? 'שלוחה / תיקייה' : 'קובץ'}${f.hint ? ' · ' + esc(f.hint) : ''} · ברירת מחדל: <span class="ltr">${esc(f.default)}</span></div>
+    </div>`).join('');
+}
+const readPaths = () => Object.fromEntries([...document.querySelectorAll('#pathFields input')].map((i) => [i.dataset.key, i.value.trim()]));
+$('resetPathsBtn').onclick = () => {
+  if (!confirm('להחזיר את כל הכתובות לברירת המחדל? (השינוי נשמר רק בלחיצה על "שמירת הגדרות")')) return;
+  PATH_FIELDS.forEach((f) => { $('path_' + f.key).value = f.default; });
+};
+
+function fillSettings(s) {
+  settings = s; loaded.settings = true;
+  $('sYemot').value = ''; secretState('sYemotState', s.yemot_token_set, s.yemot_token_hint);
+  const c = s.connection || {};
+  $('connState').className = 'secret-state ' + (c.ok ? 'set' : 'unset');
+  $('connState').textContent = 'מצב החיבור: ' + (c.message || '—');
+  $('sGoogleOn').checked = !!s.google_enabled; $('sGoogleId').value = s.google_client_id || '';
+  let paths = {}; try { paths = JSON.parse(s.yemot_paths || '{}'); } catch { paths = {}; }
+  fillPaths(s.yemot_path_fields, Array.isArray(paths) ? {} : paths);
+  $('sResend').value = ''; secretState('sResendState', s.resend_api_key_set, s.resend_api_key_hint);
+  $('sFrom').value = s.mail_from || ''; $('sSite').value = s.site_url || '';
+  $('wSubject').value = s.welcome_subject || ''; $('wTitle').value = s.welcome_title || '';
+  $('wBody').value = s.welcome_body || ''; $('wButton').value = s.welcome_button || ''; $('wNote').value = s.welcome_note || '';
+}
+async function loadSettings() { fillSettings(await api('GET', 'admin/settings')); }
+const welcomeFields = () => ({ welcome_subject: $('wSubject').value, welcome_title: $('wTitle').value, welcome_body: $('wBody').value, welcome_button: $('wButton').value, welcome_note: $('wNote').value });
+
+$('settingsForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  $('saveSettingsBtn').disabled = true;
+  try {
+    const body = {
+      yemot_token: $('sYemot').value,
+      google_enabled: $('sGoogleOn').checked, google_client_id: $('sGoogleId').value,
+      yemot_paths: readPaths(),
+      resend_api_key: $('sResend').value, mail_from: $('sFrom').value, site_url: $('sSite').value, ...welcomeFields(),
+    };
+    fillSettings(await api('PUT', 'admin/settings', body));
+    flash('settingsMsg', 'ההגדרות נשמרו');
+  } catch (err) { flash('settingsMsg', err.message, true); }
+  $('saveSettingsBtn').disabled = false;
+});
+$('testMailBtn').onclick = async () => {
+  try { const r = await api('POST', 'admin/settings/test-mail', { to: $('testTo').value }); flash('settingsMsg', 'מייל בדיקה נשלח אל ' + r.to); }
+  catch (err) { flash('settingsMsg', err.message, true); }
+};
+$('previewBtn').onclick = async () => {
+  try {
+    const r = await api('POST', 'admin/settings/preview', welcomeFields());
+    $('previewSubject').textContent = r.subject; $('previewFrame').srcdoc = r.html; $('previewDlg').showModal();
+  } catch (err) { flash('settingsMsg', err.message, true); }
+};
+
+// ===== התחלה =====
+(async () => {
+  try {
+    const r = await api('GET', 'auth/me');
+    me = r.user; myIp = r.ip || '';
+    if (!me.is_admin) return gate('הדף הזה זמין למנהל בלבד.', false);
+    $('who').textContent = 'מחובר: ' + me.name;
+    $('gate').classList.add('hidden'); $('app').classList.remove('hidden');
+    await loadUsers();
+  } catch (err) {
+    if (err.status !== 401) gate(err.message, true);
+    else gate('יש להיכנס למערכת כדי לנהל.', true);
+  }
+})();
+</script>
+</body>
+</html>
