@@ -1,13 +1,13 @@
 // ============================================================
 //  router.js — כל ה-API של מארי מקרא: /marie-mikra/api/...  (כמו במסכת של שבת)
 //  ללא כניסה:  auth/login, auth/google, auth/options, auth/setup, auth/logout
-//  עם כניסה:   auth/me, status, config, client/browser-cleanup, yemot/<Method>, history
+//  עם כניסה:   auth/me, config, client/browser-cleanup, yemot/<Method>, history
 //  מנהל בלבד:  admin/...
 // ============================================================
 import { json, notFound, errorResponse, readJson, str, clientIp } from './http.js';
 import { ensureSchema } from './schema.js';
 import { login, loginGoogle, loginOptions, logout, authenticate, publicAccount, setup } from './auth.js';
-import { proxyYemot, connectionStatus } from './proxy.js';
+import { proxyYemot } from './proxy.js';
 import { handleAdmin } from './admin.js';
 import { logAction } from './audit.js';
 import { getConfig } from './settings.js';
@@ -77,7 +77,6 @@ export async function handleApi(request, env, path) {
     const ctx = await authenticate(request, env);
 
     if (path === 'auth/me' && m === 'GET') return json({ user: publicAccount(ctx.account), ip: clientIp(request) });
-    if (path === 'status' && m === 'GET') return json(await connectionStatus(env));
     // הכתובות במערכת שהאתר עובד איתן (נערכות בהגדרות הניהול)
     if (path === 'config' && m === 'GET') return json({ paths: getPaths((await getConfig(env)).yemot_paths) });
     if (path === 'client/browser-cleanup' && m === 'POST') return await browserCleanup(request, env, ctx);

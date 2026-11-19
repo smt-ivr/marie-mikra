@@ -18,9 +18,7 @@ const studentsController = {
     },
 
     // פונקציה חדשה לקריאת נתוני תיקייה (כדי להשיג mtime)
-    fetchDirectoryData: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    fetchDirectoryData: async function(path) {
         const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
@@ -437,8 +435,7 @@ const studentsController = {
 
         this.view.innerHTML = `<div id="loading"><i class="fas fa-spinner fa-spin"></i> שומר שינויים בשרת...</div>`;
 
-        try {
-            const token = auth.getToken();
+        try {
             const apiUrl = `${auth.API_BASE}/UploadTextFile`;
             
             const response = await fetch(apiUrl, {

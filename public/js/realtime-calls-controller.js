@@ -99,9 +99,7 @@ const realtimeCallsController = {
     },
 
     fetchCallsData: async function() {
-        try {
-            const token = auth.getToken();
-            if (!token) return;
+        try {
 
             const apiUrl = `${auth.API_BASE}/${this.API_ENDPOINT}`;
             const response = await fetch(apiUrl);

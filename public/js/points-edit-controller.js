@@ -59,9 +59,7 @@ const pointsEditController = {
         }
     },
 
-    fetchIniFileContent: async function(filePath) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן.");
+    fetchIniFileContent: async function(filePath) {
         const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(filePath)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
@@ -215,8 +213,7 @@ const pointsEditController = {
         }
     },
 
-    uploadNewContent: async function(content) {
-        const token = auth.getToken();
+    uploadNewContent: async function(content) {
         const apiUrl = `${auth.API_BASE}/UploadTextFile`;
         const response = await fetch(apiUrl, {
             method: 'POST',

@@ -49,9 +49,7 @@ const pointsArchiveProcessController = {
     },
 
     executeArchiveAction: async function(targetPath) {
-        try {
-            const token = auth.getToken();
-            if (!token) throw new Error("לא נמצא טוקן.");
+        try {
 
             const apiUrl = `${auth.API_BASE}/FileAction?action=move&what=${encodeURIComponent(this.SOURCE_PATH)}&target=${encodeURIComponent(targetPath)}`;
             

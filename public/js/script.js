@@ -8,21 +8,14 @@ const app = {
 
     // אתחול כללי
     init: async function() {
-        // --- שינוי ---
-        // קודם כל מטפלים בפרמטרים מה-URL. הפונקציה הזו תגרום לרענון דף אם צריך.
-        if (this.handleUrlParameters()) {
-            return; // עצור את שאר האתחול, הדף יטען מחדש
-        }
-        // לאחר הרענון, נבדוק אם צריך להציג הודעת טוסט
+        // לאחר רענון, נבדוק אם צריך להציג הודעת טוסט
         this.checkToastFlag();
-        // --- סוף שינוי ---
 
         this.addEventListeners();
         this.loadSettings();
         
         // --- !!! תיקון: הוספת אתחול לבקר ה-MFA !!! ---
         questionsController.initialize();
-        mfaController.initialize(); // <-- הוספתי את השורה הזו
         // --- !!! סוף התיקון !!! ---
         
         await auth.initialize();
@@ -131,45 +124,6 @@ const app = {
     },
 
     /**
-     * בודק פרמטרים בכתובת ה-URL, שומר אותם, ומרענן את הדף.
-     * @returns {boolean} - מחזיר true אם בוצע רענון, אחרת false.
-     */
-    handleUrlParameters: function() {
-        try {
-            const params = new URLSearchParams(window.location.search);
-            const savedParams = [];
-            
-            if (params.has('Token') || params.has('token')) {
-                const token = params.get('Token') || params.get('token');
-                localStorage.setItem('api_token', token);
-                savedParams.push('טוקן');
-            }
-            
-            if (params.has('username')) {
-                localStorage.setItem('username', params.get('username'));
-                savedParams.push('מספר מערכת');
-            }
-            
-            if (params.has('password')) {
-                localStorage.setItem('password', params.get('password'));
-                savedParams.push('סיסמה');
-            }
-
-            if (savedParams.length > 0) {
-                // שמור דגל ב-sessionStorage (שנמחק כשהדפדפן נסגר)
-                sessionStorage.setItem('settingsSavedFromUrl', `ההגדרות הבאות נשמרו: ${savedParams.join(', ')}`);
-                
-                // רענן את הדף לכתובת הנקייה (ללא הפרמטרים)
-                location.href = window.location.pathname;
-                return true; // סמן שבוצע רענון
-            }
-        } catch (e) {
-            console.error("Error handling URL parameters:", e);
-        }
-        return false; // סמן שלא בוצע רענון
-    },
-
-    /**
      * בודק אם קיים דגל להצגת הודעה לאחר רענון
      */
     checkToastFlag: function() {
@@ -199,16 +153,10 @@ const app = {
         const closeBtn = modalOverlay.querySelector('.close-btn');
         const settingsForm = document.getElementById('settings-form');
         const resetSettingsBtn = document.getElementById('reset-settings-btn');
-        const generateTokenBtn = document.getElementById('generate-token-btn');
-        const togglePassword = document.getElementById('togglePassword');
-        const toggleToken = document.getElementById('toggleToken');
-        const passwordInput = document.getElementById('password-input');
-        const tokenInput = document.getElementById('token-input');
 
         settingsBtn.addEventListener('click', () => {
             this.loadSettings();
             modalOverlay.classList.add('visible');
-            auth.updateStatusUI();
             document.getElementById('settings-message-area').style.display = 'none';
         });
         closeBtn.addEventListener('click', () => modalOverlay.classList.remove('visible'));
@@ -223,7 +171,6 @@ const app = {
         resetSettingsBtn.addEventListener('click', () => {
             if (confirm('האם אתה בטוח שברצונך לאפס את כל ההגדרות?')) {
                 const keysToRemove = [
-                    'api_token', 'username', 'password', 
                     'active_test_path', 'points_report_path', 'previous_tests_path'
                 ];
                 keysToRemove.forEach(key => localStorage.removeItem(key));
@@ -231,39 +178,6 @@ const app = {
                 location.reload();
             }
         });
-
-        generateTokenBtn.addEventListener('click', async () => {
-            const username = document.getElementById('username-input').value;
-            const password = passwordInput.value;
-            if (!username || !password) {
-                this.showSettingsMessage('נא להזין מספר מערכת וסיסמה.', 'error');
-                return;
-            }
-
-            generateTokenBtn.disabled = true;
-            this.showSettingsMessage('יוצר טוקן, נא להמתין...', 'success');
-
-            const loginResult = await auth.login(username, password);
-
-            if (loginResult.status === 'ok') {
-                tokenInput.value = loginResult.token;
-                localStorage.setItem('api_token', loginResult.token);
-                auth.token = loginResult.token;
-                this.showSettingsMessage('טוקן נוצר ונשמר בהצלחה! יש לרענן את החיבור', 'success');
-            } else {
-                this.showSettingsMessage(loginResult.message, 'error');
-            }
-
-            generateTokenBtn.disabled = false;
-        });
-
-        const toggleVisibility = (inputElement, iconElement) => {
-            const type = inputElement.getAttribute('type') === 'password' ? 'text' : 'password';
-            inputElement.setAttribute('type', type);
-            iconElement.classList.toggle('fa-eye-slash');
-        };
-        togglePassword.addEventListener('click', () => toggleVisibility(passwordInput, togglePassword));
-        toggleToken.addEventListener('click', () => toggleVisibility(tokenInput, toggleToken));
 
         // הוספת מאזין לכפתור הסגירה של הטוסט
         const toastCloseBtn = document.getElementById('toast-close-btn');
@@ -329,18 +243,12 @@ const app = {
     },
 
     saveSettings: function() {
-        localStorage.setItem('api_token', document.getElementById('token-input').value);
-        localStorage.setItem('username', document.getElementById('username-input').value);
-        localStorage.setItem('password', document.getElementById('password-input').value);
         localStorage.setItem('active_test_path', document.getElementById('active-test-path-input').value);
         localStorage.setItem('points_report_path', document.getElementById('points-report-path-input').value);
         localStorage.setItem('previous_tests_path', document.getElementById('previous-tests-path-input').value);
     },
 
     loadSettings: function() {
-        document.getElementById('token-input').value = localStorage.getItem('api_token') || '';
-        document.getElementById('username-input').value = localStorage.getItem('username') || '';
-        document.getElementById('password-input').value = localStorage.getItem('password') || '';
         document.getElementById('active-test-path-input').value = localStorage.getItem('active_test_path') || 'ivr2:/1/1/1/ExaminationAmericanLogOK.ymgr';
         document.getElementById('points-report-path-input').value = localStorage.getItem('points_report_path') || 'ivr2:/Points/Split/points_total.ymgr';
         document.getElementById('previous_tests_path', document.getElementById('previous-tests-path-input').value);
@@ -352,7 +260,6 @@ const app = {
         titleEl.textContent = title;
         containerEl.innerHTML = `<div id="loading"><i class="fas fa-spinner fa-spin"></i> טוען נתונים...</div>`;
 
-        const token = auth.getToken();
         // --- כאן בוצע התיקון ---
         const apiUrl = `${auth.API_BASE}/RenderYMGRFile?wath=${filePath}&convertType=json&_=${new Date().getTime()}`;
         try {

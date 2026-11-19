@@ -58,8 +58,6 @@ const importQuestionsController = {
     },
 
     fetchDirectoryData: async function(path) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן התחברות.");
         
         const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
@@ -72,8 +70,6 @@ const importQuestionsController = {
     },
 
     fileActionCopy: async function(what, target) {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן התחברות.");
         
         const apiUrl = `${auth.API_BASE}/FileAction?action=copy&what=${encodeURIComponent(what)}&target=${encodeURIComponent(target)}`;
         const response = await fetch(apiUrl);
@@ -89,8 +85,6 @@ const importQuestionsController = {
 
     // תיקון: שחרור החסימה בשלוחה ivr2:/1/1 (בהתאם לבדיקת הסטטוס וסגירת המבחן)
     unblockTest: async function() {
-        const token = auth.getToken();
-        if (!token) throw new Error("לא נמצא טוקן התחברות.");
         
         const blockPath = 'ivr2:/1/1';
         const apiUrl = `${auth.API_BASE}/UpdateExtension?path=${encodeURIComponent(blockPath)}&enter_foldar_end_time=no`;
