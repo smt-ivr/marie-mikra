@@ -94,7 +94,7 @@ async function createAccount(request, env, ctx) {
   const password = String(b.password || '');
   let key = null;
   if (password) {
-    if (password.length < 6) throw badRequest('סיסמה חייבת להיות לפחות 6 תווים');
+    if (password.length < 4) throw badRequest('סיסמה חייבת להיות לפחות 4 תווים');
     key = await passwordKey(env, password);
     await checkUnique(env, 'password', key);
   }
@@ -142,7 +142,7 @@ async function updateAccount(request, env, ctx, id) {
   }
   let hasPassword = !!(a.password_hash || a.legacy_sha256 || a.legacy_pbkdf2);
   if (b.password) {
-    if (String(b.password).length < 6) throw badRequest('סיסמה חייבת להיות לפחות 6 תווים');
+    if (String(b.password).length < 4) throw badRequest('סיסמה חייבת להיות לפחות 4 תווים');
     const key = await passwordKey(env, String(b.password));
     await checkUnique(env, 'password', key, id);
     set.push('password_hash = ?', "password_salt = 'system'", 'legacy_sha256 = NULL', 'legacy_pbkdf2 = NULL');

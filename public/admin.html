@@ -326,7 +326,7 @@ document.querySelectorAll('nav.tabs button').forEach((b) => b.addEventListener('
 
 // ===== משתמשים =====
 let PERMS = {};
-const PERM_ORDER = ['tests_view', 'tests_edit', 'points_view', 'points_edit', 'students_view', 'students_edit', 'times_view', 'times_edit', 'tzintuk_view', 'tzintuk_edit', 'logs_view', 'new_site'];
+const PERM_ORDER = ['tests_view', 'tests_edit', 'points_view', 'points_edit', 'students_view', 'students_edit', 'times_view', 'times_edit', 'tzintuk_view', 'tzintuk_edit', 'logs_view', 'new_site', 'self_password'];
 
 async function loadUsers() {
   const r = await api('GET', 'admin/accounts');
@@ -382,13 +382,14 @@ function openUser(a) {
   $('uPassLabel').textContent = a?.has_password ? 'סיסמה חדשה' : 'סיסמה';
   $('uPassHint').textContent = a?.has_password
     ? 'יש סיסמה. השאר ריק כדי לא לשנות'
-    : 'לפחות 6 תווים. הסיסמה מזהה את המשתמש, ולכן צריכה להיות שונה משל משתמשים אחרים. אפשר להשאיר ריק אם נכנסים רק לפי IP / Google';
+    : 'לפחות 4 תווים (אפשר גם 4 ספרות). הסיסמה מזהה את המשתמש, ולכן צריכה להיות שונה משל משתמשים אחרים. אפשר להשאיר ריק – אם יש למשתמש ההרשאה "יצירת והחלפת סיסמה אישית", הוא יוכל ליצור סיסמה בעצמו באזור האישי';
   $('uRemovePass').checked = false;
   $('uRemovePassWrap').classList.toggle('hidden', !a?.has_password);
   $('ipRows').innerHTML = '';
   (a?.ips || []).forEach((x) => addIpRow(x.ip, x.label));
   $('myIp').textContent = myIp;
-  const have = new Set(a ? a.permissions : PERM_ORDER);
+  // משתמש חדש: כל העבודה באתר מסומנת; יצירת/החלפת סיסמה אישית – רק אם המנהל מסמן
+  const have = new Set(a ? a.permissions : PERM_ORDER.filter((p) => p !== 'self_password'));
   $('permBoxes').innerHTML = PERM_ORDER.map((p) => `<label class="check"><input type="checkbox" value="${p}" ${have.has(p) ? 'checked' : ''}> ${esc(PERMS[p] || p)}</label>`).join('');
   $('uAdmin').checked = !!a?.is_admin;
   syncAdmin();

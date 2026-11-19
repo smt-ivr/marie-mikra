@@ -5,6 +5,7 @@
 //  החיבור עצמו בעוגייה מאובטחת בשרת. בדפדפן נשמר רק שם המשתמש לתצוגה (mm_user) – לא טוקנים.
 //  בכניסה: טוקנים וסיסמאות ישנים נמחקים מהדפדפן, והשרת מקבל דיווח מה נמצא ונמחק.
 //  אין עדיין אף משתמש? → הגדרה ראשונית: טוקן + סיסמת מנהל.
+//  אזור אישי: פרטי המשתמש, ויצירה / החלפה של הסיסמה (בכפוף להרשאה "יצירת והחלפת סיסמה אישית").
 // ============================================================
 
 const MsSession = (() => {
@@ -14,7 +15,8 @@ const MsSession = (() => {
     // מפתחות שבהם האתר שמר בעבר טוקן וסיסמה
     const LEGACY_KEYS = ['api_token', 'username', 'password'];
     const ALL_PERMS = ['tests_view', 'tests_edit', 'points_view', 'points_edit', 'students_view', 'students_edit',
-        'times_view', 'times_edit', 'tzintuk_view', 'tzintuk_edit', 'logs_view', 'new_site', 'admin'];
+        'times_view', 'times_edit', 'tzintuk_view', 'tzintuk_edit', 'logs_view', 'new_site', 'self_password', 'admin'];
+    const PROMPT_FLAG = 'mmPasswordPromptShown';
 
     const store = {
         get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -68,18 +70,20 @@ const MsSession = (() => {
         } catch (e) { /* ננסה בכניסה הבאה */ }
     }
 
-    // ===== פס משתמש קטן בפינה (צף – לא משנה את עיצוב האתר) =====
+    // ===== פס משתמש קטן בשורת הלשוניות: שם (אזור אישי), ממשק חדש, ניהול, יציאה =====
     function renderUserBar() {
         let bar = $('mmUserBar');
         if (!bar) {
             bar = document.createElement('div');
             bar.id = 'mmUserBar';
-            bar.className = 'mm-userbar';
-            document.body.appendChild(bar);
+            // בשורת הלשוניות, בקצה השמאלי שלה (המקום הפנוי). בלי לשוניות – בפינה
+            const tabs = document.querySelector('#main-content nav.tabs');
+            bar.className = tabs ? 'mm-userbar mm-inline' : 'mm-userbar';
+            (tabs || document.body).appendChild(bar);
         }
         const ip = user.method === 'ip';
         bar.innerHTML = `
-            <span class="mm-name" title="מחובר"><i class="fa fa-circle-user"></i><strong></strong></span>
+            <button class="mm-name" id="mmBarMe" type="button" title="אזור אישי"><i class="fa fa-circle-user"></i><strong></strong></button>
             <span class="mm-sep"></span>
             <a id="mmBarNew" href="/marie-mikra/new/" title="מעבר לממשק החדש"><i class="fa fa-wand-magic-sparkles"></i><span class="mm-label">ממשק חדש</span></a>
             <a id="mmBarAdmin" href="/marie-mikra/admin" target="_blank" rel="noopener" title="ניהול משתמשים, הגדרות ויומנים"><i class="fa fa-users"></i><span class="mm-label">ניהול</span></a>
@@ -87,6 +91,88 @@ const MsSession = (() => {
                 <i class="fa ${ip ? 'fa-key' : 'fa-right-from-bracket'}"></i><span class="mm-label">${ip ? 'התחברות עם סיסמה' : 'יציאה'}</span></button>`;
         bar.querySelector('strong').textContent = user.name || '';
         $('mmBarOut').onclick = ip ? openPasswordLogin : logout;
+        $('mmBarMe').onclick = () => openPersonalArea();
+    }
+
+    // ===== אזור אישי =====
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const METHOD_NAMES = { password: 'סיסמה', ip: 'כתובת IP מורשית', google: 'Google' };
+
+    function openPersonalArea(opts = {}) {
+        if (!user) return;
+        const old = $('mmPersonal');
+        if (old) old.remove();
+        const hasPw = !!user.has_password;
+        const allowed = can('self_password');
+        // אימות הסיסמה הנוכחית: רק כשיש סיסמה, ולא כשנכנסו עכשיו עם Google
+        const needCurrent = hasPw && user.method !== 'google';
+        const wrap = document.createElement('div');
+        wrap.id = 'mmPersonal';
+        wrap.className = 'mm-pa-overlay';
+        wrap.innerHTML = `
+            <div class="mm-pa" role="dialog" aria-labelledby="mmPaTitle">
+                <div class="mm-pa-head">
+                    <h2 id="mmPaTitle"><i class="fa fa-circle-user"></i> אזור אישי</h2>
+                    <button type="button" class="mm-pa-x" aria-label="סגירה">&times;</button>
+                </div>
+                ${opts.prompt ? '<div class="mm-pa-note"><i class="fa fa-key"></i> עדיין אין לכם סיסמה. אפשר ליצור סיסמה עכשיו, כדי להיכנס גם מכל מחשב אחר.</div>' : ''}
+                <dl class="mm-pa-info">
+                    <dt>שם</dt><dd>${esc(user.name)}</dd>
+                    ${user.email ? `<dt>מייל</dt><dd dir="ltr">${esc(user.email)}</dd>` : ''}
+                    <dt>נכנסתם עם</dt><dd>${esc(METHOD_NAMES[user.method] || user.method || '—')}</dd>
+                    <dt>סיסמה</dt><dd>${hasPw ? 'מוגדרת' : 'עדיין אין'}</dd>
+                </dl>
+                ${allowed ? `
+                <form class="mm-pa-form" autocomplete="off">
+                    <h3>${hasPw ? 'החלפת סיסמה' : 'יצירת סיסמה'}</h3>
+                    ${needCurrent ? '<label>סיסמה נוכחית<input type="password" name="current" dir="ltr" autocomplete="current-password"></label>' : ''}
+                    <label>${hasPw ? 'סיסמה חדשה' : 'סיסמה'} (לפחות 4 תווים, אפשר גם 4 ספרות)<input type="password" name="next" dir="ltr" autocomplete="new-password"></label>
+                    <label>אימות הסיסמה<input type="password" name="next2" dir="ltr" autocomplete="new-password"></label>
+                    <div class="mm-pa-msg" role="alert"></div>
+                    <div class="mm-pa-actions">
+                        ${opts.prompt ? '<button type="button" class="mm-pa-later">אחר כך</button>' : ''}
+                        <button type="submit" class="mm-pa-save">${hasPw ? 'החלפת סיסמה' : 'יצירת סיסמה'}</button>
+                    </div>
+                </form>` : `<p class="mm-pa-muted">${hasPw ? 'להחלפת הסיסמה' : 'ליצירת סיסמה'} יש לפנות למנהל המערכת.</p>`}
+            </div>`;
+        document.body.appendChild(wrap);
+        const close = () => wrap.remove();
+        wrap.querySelector('.mm-pa-x').onclick = close;
+        wrap.addEventListener('mousedown', (e) => { if (e.target === wrap) close(); });
+        const later = wrap.querySelector('.mm-pa-later');
+        if (later) later.onclick = close;
+        const form = wrap.querySelector('form');
+        if (!form) return;
+        const msg = wrap.querySelector('.mm-pa-msg');
+        const show = (text, ok) => { msg.textContent = text; msg.className = 'mm-pa-msg ' + (ok ? 'ok' : 'err'); };
+        setTimeout(() => (form.current || form.next).focus(), 50);
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const next = form.next.value;
+            if (next.length < 4) return show('הסיסמה חייבת להכיל לפחות 4 תווים');
+            if (next !== form.next2.value) return show('הסיסמאות אינן זהות');
+            if (needCurrent && !form.current.value) return show('יש להזין את הסיסמה הנוכחית');
+            const btn = form.querySelector('.mm-pa-save');
+            btn.disabled = true;
+            try {
+                await call('POST', 'auth/password', { current: needCurrent ? form.current.value : undefined, password: next }, 15000);
+                user.has_password = true;
+                saveSession(user);
+                form.innerHTML = `<div class="mm-pa-msg ok"><i class="fa fa-circle-check"></i> ${hasPw ? 'הסיסמה הוחלפה' : 'הסיסמה נוצרה'}. מעכשיו אפשר להיכנס איתה מכל מחשב.</div>
+                    <div class="mm-pa-actions"><button type="button" class="mm-pa-save">סגירה</button></div>`;
+                form.querySelector('.mm-pa-save').onclick = close;
+            } catch (er) {
+                show(er.message);
+                btn.disabled = false;
+            }
+        };
+    }
+
+    // משתמש בלי סיסמה, עם ההרשאה – מוצעת לו יצירת סיסמה (פעם אחת בכל פתיחה של הדפדפן)
+    function maybePromptPassword(u) {
+        if (!u || u.has_password !== false || !can('self_password')) return;
+        try { if (sessionStorage.getItem(PROMPT_FLAG) === '1') return; sessionStorage.setItem(PROMPT_FLAG, '1'); } catch (e) { /* ignore */ }
+        openPersonalArea({ prompt: true });
     }
 
     function showSite() {
@@ -151,12 +237,13 @@ const MsSession = (() => {
         saveSession(u);
         applyPermissions();
         if (reloadAfterLogin) return location.reload();
-        if (done) { renderUserBar(); return; }
+        if (done) { renderUserBar(); maybePromptPassword(u); return; }
         done = true;
         renderUserBar();
         showSite();
         resolveReady(u);
         cleanBrowser();
+        maybePromptPassword(u);
     }
 
     // ===== הרשאות: מה שאין למשתמש הרשאה אליו מוסתר באתר (והשרת חוסם ממילא) =====
@@ -227,7 +314,7 @@ const MsSession = (() => {
             const token = $('setupToken').value.trim();
             const p1 = $('setupPass').value;
             if (!token) return showError('יש להזין טוקן');
-            if (p1.length < 6) return showError('הסיסמה חייבת להכיל לפחות 6 תווים');
+            if (p1.length < 4) return showError('הסיסמה חייבת להכיל לפחות 4 תווים');
             if (p1 !== $('setupPass2').value) return showError('הסיסמאות אינן זהות');
             const btn = $('setupBtn');
             btn.disabled = true;
@@ -328,6 +415,7 @@ const MsSession = (() => {
         user: () => user,
         can,
         firstAllowedTab,
+        openPersonalArea,
         logout,
     };
 })();

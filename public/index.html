@@ -70,7 +70,7 @@
                         <i class="fa fa-key lg-field-ico"></i>
                         <input type="password" id="setupToken" class="lg-input" autocomplete="off" spellcheck="false" dir="ltr">
                     </div>
-                    <label class="lg-label" for="setupPass">סיסמת מנהל (לפחות 6 תווים)</label>
+                    <label class="lg-label" for="setupPass">סיסמת מנהל (לפחות 4 תווים)</label>
                     <div class="lg-field">
                         <i class="fa fa-lock lg-field-ico"></i>
                         <input type="password" id="setupPass" class="lg-input" autocomplete="new-password" spellcheck="false" dir="ltr">
@@ -102,7 +102,7 @@
 
         <div class="toolbar-section toolbar-left">
             
-            <button id="settings-btn" class="button button-settings" title="הגדרות"><i class="fas fa-cog"></i></button>
+            <button id="settings-btn" class="button button-settings" title="אזור אישי"><i class="fas fa-user-circle"></i></button>
             
             <button id="refresh-btn" class="button button-primary"><i class="fas fa-sync-alt"></i> רענן נתונים</button>
             
@@ -124,36 +124,11 @@
         </div>
     </header>
 
-    <div id="settings-modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h2><i class="fas fa-sliders-h"></i> הגדרות מערכת</h2>
-                <span class="close-btn" title="סגירה">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div id="settings-message-area"></div> 
-
-                <form id="settings-form">
-                    <p class="form-description">נתיבי קבצים</p>
-                    <div class="form-group">
-                        <label for="active-test-path-input">נתיב מבחן פעיל:</label>
-                        <input type="text" id="active-test-path-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="points-report-path-input">נתיב דוח נקודות:</label>
-                        <input type="text" id="points-report-path-input">
-                    </div>
-                    <div class="form-group">
-                        <label for="previous-tests-path-input">נתיב דפדוף מבחנים:</label>
-                        <input type="text" id="previous-tests-path-input">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" form="settings-form" class="button button-success"><i class="fas fa-save"></i> שמור הגדרות</button>
-                <button type="button" id="reset-settings-btn" class="button button-danger"><i class="fas fa-undo"></i> איפוס הגדרות</button>
-            </div>
-        </div>
+    <!-- הנתיבים במערכת שהאתר עובד איתם – נקבעים בהגדרות הניהול (השרת ממלא אותם). לא מוצג -->
+    <div id="settings-modal-overlay" hidden>
+        <input type="hidden" id="active-test-path-input">
+        <input type="hidden" id="points-report-path-input">
+        <input type="hidden" id="previous-tests-path-input">
     </div>
 
     <main class="container">

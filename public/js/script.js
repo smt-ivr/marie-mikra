@@ -76,13 +76,6 @@ const app = {
         initialStatus.innerHTML = messageHTML;
     },
 
-    showSettingsMessage: function(message, type = 'success') {
-        const messageArea = document.getElementById('settings-message-area');
-        messageArea.textContent = message;
-        messageArea.className = type;
-        messageArea.style.display = 'block';
-    },
-
     // ==================================================
     //  פונקציות חדשות לניהול טוסט ופרמטרים מ-URL
     // ==================================================
@@ -148,36 +141,8 @@ const app = {
             });
         });
 
-        const settingsBtn = document.getElementById('settings-btn');
-        const modalOverlay = document.getElementById('settings-modal-overlay');
-        const closeBtn = modalOverlay.querySelector('.close-btn');
-        const settingsForm = document.getElementById('settings-form');
-        const resetSettingsBtn = document.getElementById('reset-settings-btn');
-
-        settingsBtn.addEventListener('click', () => {
-            this.loadSettings();
-            modalOverlay.classList.add('visible');
-            document.getElementById('settings-message-area').style.display = 'none';
-        });
-        closeBtn.addEventListener('click', () => modalOverlay.classList.remove('visible'));
-
-        settingsForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            this.saveSettings();
-            modalOverlay.classList.remove('visible');
-            location.reload(); 
-        });
-
-        resetSettingsBtn.addEventListener('click', () => {
-            if (confirm('האם אתה בטוח שברצונך לאפס את כל ההגדרות?')) {
-                const keysToRemove = [
-                    'active_test_path', 'points_report_path', 'previous_tests_path'
-                ];
-                keysToRemove.forEach(key => localStorage.removeItem(key));
-                alert('ההגדרות אופסו בהצלחה!');
-                location.reload();
-            }
-        });
+        // הכפתור שהיה "הגדרות" פותח עכשיו את האזור האישי (session.js)
+        document.getElementById('settings-btn').addEventListener('click', () => MsSession.openPersonalArea());
 
         // הוספת מאזין לכפתור הסגירה של הטוסט
         const toastCloseBtn = document.getElementById('toast-close-btn');
@@ -242,17 +207,11 @@ const app = {
         }
     },
 
-    saveSettings: function() {
-        localStorage.setItem('active_test_path', document.getElementById('active-test-path-input').value);
-        localStorage.setItem('points_report_path', document.getElementById('points-report-path-input').value);
-        localStorage.setItem('previous_tests_path', document.getElementById('previous-tests-path-input').value);
-    },
-
+    // הנתיבים במערכת – מהגדרות הניהול (השרת מכניס אותם כאן במקום ברירות המחדל)
     loadSettings: function() {
-        document.getElementById('active-test-path-input').value = localStorage.getItem('active_test_path') || 'ivr2:/1/1/1/ExaminationAmericanLogOK.ymgr';
-        document.getElementById('points-report-path-input').value = localStorage.getItem('points_report_path') || 'ivr2:/Points/Split/points_total.ymgr';
-        document.getElementById('previous_tests_path', document.getElementById('previous-tests-path-input').value);
-        document.getElementById('previous-tests-path-input').value = localStorage.getItem('previous_tests_path') || 'ivr2:/מבחנים-קודמים';
+        document.getElementById('active-test-path-input').value = 'ivr2:/1/1/1/ExaminationAmericanLogOK.ymgr';
+        document.getElementById('points-report-path-input').value = 'ivr2:/Points/Split/points_total.ymgr';
+        document.getElementById('previous-tests-path-input').value = 'ivr2:/מבחנים-קודמים';
     },
 
     fetchData: async function(filePath, title, headerEl, containerEl, titleEl) {

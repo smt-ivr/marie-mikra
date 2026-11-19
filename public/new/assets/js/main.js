@@ -1,7 +1,7 @@
 // App shell, sign-in screens and hash router.
-import { authState, refreshStatus, logout, can, isMaster, LOGIN_URL, ADMIN_URL } from './core/auth.js';
+import { authState, refreshStatus, logout, can, isMaster, changeOwnPassword, LOGIN_URL, ADMIN_URL } from './core/auth.js';
 import { getCustomerData, onServerEvent } from './core/api.js';
-import { toast, loadingHtml, closeAllModals } from './core/ui.js';
+import { toast, loadingHtml, closeAllModals, openModal } from './core/ui.js';
 import { esc, storageGet, storageSet, fmtNum } from './core/util.js';
 import { startCalls } from './widgets/calls.js';
 import { startMessages } from './widgets/message.js';
@@ -89,7 +89,7 @@ function renderShell() {
           ? `<a href="${n.href}" target="_blank" rel="noopener"><i class="fa-solid ${n.icon}"></i><span>${n.label}</span><i class="fa-solid fa-arrow-up-right-from-square nav-ext"></i></a>`
           : `<a href="#/${n.route}" data-route="${n.route}"><i class="fa-solid ${n.icon}"></i><span>${n.label}</span></a>`)).join('')}</nav>
         <div class="sidebar-foot">
-          <div class="who"><i class="fa-solid ${p.master ? 'fa-user-shield' : p.via === 'ip' ? 'fa-network-wired' : 'fa-circle-user'}"></i><span>${esc(p.label)}</span>
+          <div class="who"><i class="fa-solid ${p.master ? 'fa-user-shield' : p.via === 'ip' ? 'fa-network-wired' : 'fa-circle-user'}"></i><button type="button" class="who-name" id="me-btn" title="אזור אישי">${esc(p.label)}</button>
             ${p.via === 'ip' ? '' : '<button class="icon-btn" id="logout-btn" title="יציאה"><i class="fa-solid fa-right-from-bracket"></i></button>'}</div>
           ${legacyButton('btn-block')}
           <p class="credit">פיתוח מיוחד עבור ת"ת בת עין צפת<br>פותח בסייעתא דישמיא ע"י שימי טרייטל</p>
@@ -110,6 +110,7 @@ function renderShell() {
       </div>
     </div>`;
   app.querySelector('#theme-btn').onclick = toggleTheme;
+  app.querySelector('#me-btn').onclick = () => openPersonalArea();
   const lo = app.querySelector('#logout-btn');
   if (lo) lo.onclick = async () => { await logout().catch(() => {}); goToLogin(); };
   const sidebar = app.querySelector('#sidebar');
@@ -128,6 +129,74 @@ function renderShell() {
     startCalls(app.querySelector('#calls-btn'));
     startMessages(app.querySelector('#bell-btn'));
   }
+}
+
+// ---------------- Personal area ----------------
+// Same rules as the original site: changing a password needs the current one,
+// except right after signing in with Google; without a password one can be created.
+// Only with the permission "יצירת והחלפת סיסמה אישית".
+
+const METHOD_NAMES = { password: 'סיסמה', ip: 'כתובת IP מורשית', google: 'Google' };
+
+function openPersonalArea({ prompt = false } = {}) {
+  const u = authState.user;
+  if (!u) return;
+  const hasPw = !!u.has_password;
+  const allowed = can('self_password');
+  const needCurrent = hasPw && u.method !== 'google';
+  const m = openModal({
+    title: 'אזור אישי', icon: 'fa-circle-user', size: 'sm',
+    body: `${prompt ? '<div class="alert alert-info small"><i class="fa-solid fa-key"></i> עדיין אין לכם סיסמה. אפשר ליצור סיסמה עכשיו, כדי להיכנס גם מכל מחשב אחר.</div>' : ''}
+      <div class="kv-grid">
+        <div class="kv"><span>שם</span><strong>${esc(u.name)}</strong></div>
+        ${u.email ? `<div class="kv"><span>מייל</span><strong dir="ltr">${esc(u.email)}</strong></div>` : ''}
+        <div class="kv"><span>נכנסתם עם</span><strong>${esc(METHOD_NAMES[u.method] || u.method || '—')}</strong></div>
+        <div class="kv"><span>סיסמה</span><strong>${hasPw ? 'מוגדרת' : 'עדיין אין'}</strong></div>
+      </div>
+      ${allowed ? `<form class="form" id="pa-form" autocomplete="off" style="margin-top:1rem">
+          <h4 style="margin:0">${hasPw ? 'החלפת סיסמה' : 'יצירת סיסמה'}</h4>
+          ${needCurrent ? '<label class="field"><span>סיסמה נוכחית</span><input class="input" type="password" name="current" dir="ltr" autocomplete="current-password"></label>' : ''}
+          <label class="field"><span>${hasPw ? 'סיסמה חדשה' : 'סיסמה'} (לפחות 4 תווים, אפשר גם 4 ספרות)</span><input class="input" type="password" name="next" dir="ltr" autocomplete="new-password"></label>
+          <label class="field"><span>אימות הסיסמה</span><input class="input" type="password" name="next2" dir="ltr" autocomplete="new-password"></label>
+          <p class="field-error" hidden></p>
+        </form>` : `<p class="muted small" style="margin-top:1rem">${hasPw ? 'להחלפת הסיסמה' : 'ליצירת סיסמה'} יש לפנות למנהל המערכת.</p>`}`,
+    footer: allowed
+      ? `${prompt ? '<button class="btn btn-ghost" data-act="later">אחר כך</button>' : ''}<button class="btn btn-primary" data-act="save"><i class="fa-solid fa-key"></i> ${hasPw ? 'החלפת סיסמה' : 'יצירת סיסמה'}</button>`
+      : '<button class="btn btn-ghost" data-act="later">סגירה</button>',
+  });
+  const later = m.footer.querySelector('[data-act=later]');
+  if (later) later.onclick = () => m.close();
+  const f = m.body.querySelector('#pa-form');
+  if (!f) return;
+  const err = f.querySelector('.field-error');
+  const fail = (t) => { err.textContent = t; err.hidden = false; };
+  setTimeout(() => (f.current || f.next).focus(), 50);
+  const submit = async () => {
+    err.hidden = true;
+    if (f.next.value.length < 4) return fail('הסיסמה חייבת להכיל לפחות 4 תווים');
+    if (f.next.value !== f.next2.value) return fail('הסיסמאות אינן זהות');
+    if (needCurrent && !f.current.value) return fail('יש להזין את הסיסמה הנוכחית');
+    const btn = m.footer.querySelector('[data-act=save]');
+    btn.disabled = true;
+    try {
+      await changeOwnPassword(needCurrent ? f.current.value : undefined, f.next.value);
+      u.has_password = true;
+      m.close();
+      toast(hasPw ? 'הסיסמה הוחלפה' : 'הסיסמה נוצרה. מעכשיו אפשר להיכנס איתה מכל מחשב', 'success', 6000);
+    } catch (e) {
+      fail(e.message);
+      btn.disabled = false;
+    }
+  };
+  f.onsubmit = (e) => { e.preventDefault(); submit(); };
+  m.footer.querySelector('[data-act=save]').onclick = submit;
+}
+
+function maybePromptPassword() {
+  const u = authState.user;
+  if (!u || u.has_password !== false || !can('self_password')) return;
+  try { if (sessionStorage.getItem('mmPasswordPromptShown') === '1') return; sessionStorage.setItem('mmPasswordPromptShown', '1'); } catch { /* ignore */ }
+  openPersonalArea({ prompt: true });
 }
 
 // ---------------- Router ----------------
@@ -179,6 +248,7 @@ async function boot() {
     if (!can('new_site')) { location.href = LEGACY_URL; return; }
     renderShell();
     route();
+    maybePromptPassword();
   })();
   try { await booting; } finally { booting = null; }
 }
