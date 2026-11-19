@@ -164,8 +164,7 @@ const announcementsReplyController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
 
-        const params = new URLSearchParams({
-            token: token,
+        const params = new URLSearchParams({
             from: '', // ישתמש בברירת המחדל של המערכת
             message: message,
             phones: phone
@@ -206,7 +205,7 @@ const announcementsReplyController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
         
-        const params = new URLSearchParams({ token: token, limit: 100 }); // הגבלה ל-100 אחרונים
+        const params = new URLSearchParams({ limit: 100 }); // הגבלה ל-100 אחרונים
         const apiUrl = `${auth.API_BASE}/GetSmsOutLog?${params.toString()}`;
         
         const response = await fetch(apiUrl);

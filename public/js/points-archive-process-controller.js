@@ -53,7 +53,7 @@ const pointsArchiveProcessController = {
             const token = auth.getToken();
             if (!token) throw new Error("לא נמצא טוקן.");
 
-            const apiUrl = `${auth.API_BASE}/FileAction?token=${token}&action=move&what=${encodeURIComponent(this.SOURCE_PATH)}&target=${encodeURIComponent(targetPath)}`;
+            const apiUrl = `${auth.API_BASE}/FileAction?action=move&what=${encodeURIComponent(this.SOURCE_PATH)}&target=${encodeURIComponent(targetPath)}`;
             
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);

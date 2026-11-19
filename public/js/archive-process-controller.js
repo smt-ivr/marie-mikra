@@ -100,7 +100,7 @@ const archiveProcessController = {
     createDirectory: async function(path) {
         try {
             const token = auth.getToken();
-            const apiUrl = `${auth.API_BASE}/UpdateExtension?token=${token}&path=${encodeURIComponent(path)}`;
+            const apiUrl = `${auth.API_BASE}/UpdateExtension?path=${encodeURIComponent(path)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`שגיאת רשת: ${response.status}`);
             const result = await response.json();
@@ -115,7 +115,7 @@ const archiveProcessController = {
         try {
             const token = auth.getToken();
             // שליחת בקשה ספציפית כפי שהתבקש
-            const apiUrl = `${auth.API_BASE}/UpdateExtension?token=${token}&path=ivr2:/1/1&enter_foldar_end_time=2019-07-09-18-52-30`;
+            const apiUrl = `${auth.API_BASE}/UpdateExtension?path=ivr2:/1/1&enter_foldar_end_time=2019-07-09-18-52-30`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`שגיאת רשת: ${response.status}`);
             const result = await response.json();
@@ -128,7 +128,7 @@ const archiveProcessController = {
     fileAction: async function(action, what, target) {
         try {
             const token = auth.getToken();
-            const apiUrl = `${auth.API_BASE}/FileAction?token=${token}&action=${action}&what=${encodeURIComponent(what)}&target=${encodeURIComponent(target)}`;
+            const apiUrl = `${auth.API_BASE}/FileAction?action=${action}&what=${encodeURIComponent(what)}&target=${encodeURIComponent(target)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error(`שגיאת רשת: ${response.status}`);
             const result = await response.json();

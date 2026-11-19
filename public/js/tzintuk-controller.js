@@ -74,8 +74,7 @@ const tzintukController = {
     apiCall: async function(endpoint, params = {}, method = 'GET') {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
-        
-        params.token = token;
+        
         const queryString = new URLSearchParams(params).toString();
         const apiUrl = `${auth.API_BASE}/${endpoint}?${queryString}`;
         

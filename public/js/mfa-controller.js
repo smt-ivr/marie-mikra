@@ -94,8 +94,7 @@ const mfaController = {
     // פונקציית API פנימית
     apiCall: async function(endpoint, params = {}) {
         if (!this.apiToken) throw new Error("MFA: No token provided.");
-        
-        params.token = this.apiToken;
+        
         const queryString = new URLSearchParams(params).toString();
         const url = `${this.API_BASE}/${endpoint}?${queryString}`;
         

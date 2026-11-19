@@ -366,7 +366,7 @@ const announcementsController = {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
         // --- כאן בוצע התיקון ---
-        const apiUrl = `${auth.API_BASE}/GetTextFile?token=${token}&what=${encodeURIComponent(path)}&_=${new Date().getTime()}`;
+        const apiUrl = `${auth.API_BASE}/GetTextFile?what=${encodeURIComponent(path)}&_=${new Date().getTime()}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();
@@ -381,7 +381,7 @@ const announcementsController = {
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ token, what: path, contents: content })
+            body: new URLSearchParams({ what: path, contents: content })
         });
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();
@@ -391,7 +391,7 @@ const announcementsController = {
     fetchDirectoryData: async function(path) {
         const token = auth.getToken();
         if (!token) throw new Error("לא נמצא טוקן.");
-        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?token=${token}&path=${encodeURIComponent(path)}`;
+        const apiUrl = `${auth.API_BASE}/GetIVR2Dir?path=${encodeURIComponent(path)}`;
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error(`שגיאת רשת (${response.status})`);
         const result = await response.json();
@@ -460,7 +460,7 @@ const announcementsController = {
 
         let listHtml = filteredList.map(msg => {
             const audioPlayer = msg.audioPath 
-                ? `<div class="audio-player-wrapper"><audio controls controlslist="nodownload" src="${auth.API_BASE}/DownloadFile?token=${token}&path=${encodeURIComponent(msg.audioPath)}"></audio></div>` 
+                ? `<div class="audio-player-wrapper"><audio controls controlslist="nodownload" src="${auth.API_BASE}/DownloadFile?path=${encodeURIComponent(msg.audioPath)}"></audio></div>` 
                 : '';
             
             const safeTitle = String(msg.title || '').replace(/"/g, '&quot;');
@@ -559,7 +559,7 @@ const announcementsController = {
     showPopup: function(message) {
         const token = auth.getToken();
         const audioPlayer = message.audioPath
-            ? `<div class="audio-player-wrapper"><audio controls controlslist="nodownload" src="${auth.API_BASE}/DownloadFile?token=${token}&path=${encodeURIComponent(message.audioPath)}"></audio></div>`
+            ? `<div class="audio-player-wrapper"><audio controls controlslist="nodownload" src="${auth.API_BASE}/DownloadFile?path=${encodeURIComponent(message.audioPath)}"></audio></div>`
             : '';
             
         document.getElementById('popup-title').innerHTML = `<i class="fas fa-info-circle"></i> ${message.title}`;
