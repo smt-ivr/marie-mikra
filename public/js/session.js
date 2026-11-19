@@ -139,8 +139,14 @@ const MsSession = (() => {
         const close = () => wrap.remove();
         wrap.querySelector('.mm-pa-x').onclick = close;
         wrap.addEventListener('mousedown', (e) => { if (e.target === wrap) close(); });
+        // "אחר כך" – נשמר בחשבון בשרת: ההצעה לא תופיע יותר, עד שהמנהל יאפס בדף הניהול
         const later = wrap.querySelector('.mm-pa-later');
-        if (later) later.onclick = close;
+        if (later) later.onclick = () => {
+            close();
+            user.password_prompt_dismissed = true;
+            saveSession(user);
+            call('POST', 'auth/password-prompt/dismiss', {}, 8000).catch(() => {});
+        };
         const form = wrap.querySelector('form');
         if (!form) return;
         const msg = wrap.querySelector('.mm-pa-msg');
@@ -168,9 +174,11 @@ const MsSession = (() => {
         };
     }
 
-    // משתמש בלי סיסמה, עם ההרשאה – מוצעת לו יצירת סיסמה (פעם אחת בכל פתיחה של הדפדפן)
+    // משתמש בלי סיסמה, עם ההרשאה – מוצעת לו יצירת סיסמה.
+    // "אחר כך" נשמר בשרת (המנהל יכול לאפס). סגירה ב-X – רק עד שהדפדפן נסגר.
     function maybePromptPassword(u) {
-        if (!u || u.has_password !== false || !can('self_password')) return;
+        if (!u || u.has_password !== false || u.password_prompt_dismissed || !can('self_password')) return;
+        if ($('mmPersonal')) return;
         try { if (sessionStorage.getItem(PROMPT_FLAG) === '1') return; sessionStorage.setItem(PROMPT_FLAG, '1'); } catch (e) { /* ignore */ }
         openPersonalArea({ prompt: true });
     }

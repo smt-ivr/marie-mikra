@@ -73,6 +73,8 @@ export function publicAccount(a, method = a.s_method || null) {
     is_admin: !!a.is_admin,
     permissions: permissionsOf(a),
     has_password: !!(a.password_hash || a.legacy_sha256 || a.legacy_pbkdf2),
+    // לחץ "אחר כך" בהצעה ליצור סיסמה (המנהל יכול לאפס)
+    password_prompt_dismissed: !!a.password_prompt_dismissed,
   };
 }
 
@@ -315,6 +317,13 @@ export async function changeOwnPassword(request, env, ctx) {
   ]);
   await logAction(env, request, ctx, { kind: 'auth', action: hasPassword ? 'החלפת סיסמה אישית' : 'יצירת סיסמה אישית', target: a.display_name });
   return json({ has_password: true });
+}
+
+// "אחר כך" בהצעה ליצור סיסמה – ההצעה לא תופיע יותר, עד שהמנהל יאפס
+export async function dismissPasswordPrompt(request, env, ctx) {
+  await env.DB.prepare('UPDATE mm_accounts SET password_prompt_dismissed = ? WHERE id = ?').bind(israelNow(), ctx.account.id).run();
+  await logAction(env, request, ctx, { kind: 'auth', action: 'דחיית ההצעה ליצור סיסמה', target: ctx.account.display_name });
+  return json({ dismissed: true });
 }
 
 export function requireAdmin(ctx) {

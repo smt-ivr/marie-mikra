@@ -25,6 +25,7 @@ function accountOut(a, ips) {
     permissions: cleanPermissions(stored),
     active: !!a.active,
     has_password: !!(a.password_hash || a.legacy_sha256 || a.legacy_pbkdf2),
+    password_prompt_dismissed: a.password_prompt_dismissed || null,
     ips: ips.filter((i) => i.account_id === a.id).map((i) => ({ id: i.id, ip: i.ip, label: i.label || '' })),
     last_used_at: a.last_used_at,
     created_at: a.created_at,
@@ -175,6 +176,8 @@ async function updateAccount(request, env, ctx, id) {
     if (perms.slice().sort().join() !== before.slice().sort().join()) put('permissions', JSON.stringify(perms), 'הרשאות', permNames(perms));
   }
   if (b.is_admin !== undefined && !!b.is_admin !== !!a.is_admin) put('is_admin', b.is_admin ? 1 : 0, 'ניהול המערכת', b.is_admin ? 'כן' : 'לא');
+  // הצגה מחדש של ההצעה ליצור סיסמה (אחרי שהמשתמש לחץ "אחר כך")
+  if (b.reset_password_prompt && a.password_prompt_dismissed) put('password_prompt_dismissed', null, 'הצעה ליצור סיסמה', 'תוצג שוב');
   if (b.active !== undefined && !!b.active !== !!a.active) { put('active', b.active ? 1 : 0, 'פעיל', b.active ? 'כן' : 'לא'); if (!b.active) dropSessions = true; }
 
   // לא משאירים את המערכת בלי מנהל פעיל

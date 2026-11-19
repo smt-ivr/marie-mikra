@@ -6,7 +6,7 @@
 // ============================================================
 import { json, notFound, errorResponse, readJson, str, clientIp } from './http.js';
 import { ensureSchema } from './schema.js';
-import { login, loginGoogle, loginOptions, logout, authenticate, publicAccount, setup, changeOwnPassword } from './auth.js';
+import { login, loginGoogle, loginOptions, logout, authenticate, publicAccount, setup, changeOwnPassword, dismissPasswordPrompt } from './auth.js';
 import { proxyYemot } from './proxy.js';
 import { handleAdmin } from './admin.js';
 import { logAction } from './audit.js';
@@ -78,6 +78,7 @@ export async function handleApi(request, env, path) {
 
     if (path === 'auth/me' && m === 'GET') return json({ user: publicAccount(ctx.account), ip: clientIp(request) });
     if (path === 'auth/password' && m === 'POST') return await changeOwnPassword(request, env, ctx);
+    if (path === 'auth/password-prompt/dismiss' && m === 'POST') return await dismissPasswordPrompt(request, env, ctx);
     // הכתובות במערכת שהאתר עובד איתן (נערכות בהגדרות הניהול)
     if (path === 'config' && m === 'GET') return json({ paths: getPaths((await getConfig(env)).yemot_paths) });
     if (path === 'client/browser-cleanup' && m === 'POST') return await browserCleanup(request, env, ctx);
