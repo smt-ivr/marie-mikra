@@ -72,6 +72,7 @@ export function publicAccount(a, method = a.s_method || null) {
     email: a.email || null,
     is_admin: !!a.is_admin,
     permissions: permissionsOf(a),
+    has_password: !!(a.password_hash || a.legacy_sha256 || a.legacy_pbkdf2),
   };
 }
 
@@ -210,7 +211,7 @@ export async function setup(request, env) {
   const token = str(body.token, 300);
   const password = String(body.password || '');
   if (!token) throw badRequest('יש להזין טוקן');
-  if (password.length < 6) throw badRequest('הסיסמה חייבת להכיל לפחות 6 תווים');
+  if (password.length < 4) throw badRequest('הסיסמה חייבת להכיל לפחות 4 תווים');
   // בדיקה שהטוקן עובד
   let ok = false;
   try {
@@ -279,6 +280,41 @@ export async function authenticate(request, env) {
     if (!ok) throw unauthorized('הכתובת שלכם השתנתה, יש להיכנס מחדש');
   }
   return { account: row, sessionHash: await sha256Hex(token) };
+}
+
+// ===== אזור אישי: יצירת / החלפת סיסמה של המשתמש עצמו (בכפוף להרשאה) =====
+// יש כבר סיסמה → צריך את הסיסמה הנוכחית, חוץ ממי שנכנס עכשיו עם Google.
+// אין עדיין סיסמה → יוצרים בלי אימות.
+export async function changeOwnPassword(request, env, ctx) {
+  requirePermission(ctx, 'self_password');
+  const a = ctx.account;
+  const body = await readJson(request);
+  const next = String(body.password || '');
+  if (next.length < 4) throw badRequest('הסיסמה חייבת להכיל לפחות 4 תווים');
+  if (next.length > 200) throw badRequest('הסיסמה ארוכה מדי');
+  const hasPassword = !!(a.password_hash || a.legacy_sha256 || a.legacy_pbkdf2);
+  if (hasPassword && a.s_method !== 'google') {
+    await checkRateLimit(env, request);
+    const current = String(body.current || '');
+    const key = current ? await passwordKey(env, current) : '';
+    const ok = current && (sameHash(key, a.password_hash || '')
+      || (a.legacy_sha256 && sameHash(await sha256Hex(current), a.legacy_sha256))
+      || (a.legacy_pbkdf2 && await matchesOldPbkdf2(current, a.legacy_pbkdf2)));
+    if (!ok) {
+      await loginLog(env, request, { success: false, method: 'password-change', username: a.display_name, accountId: a.id });
+      throw badRequest('הסיסמה הנוכחית שגויה');
+    }
+  }
+  const key = await passwordKey(env, next);
+  const taken = await env.DB.prepare('SELECT id FROM mm_accounts WHERE password_hash = ? AND id != ?').bind(key, a.id).first();
+  if (taken) throw new ApiError(409, 'conflict', 'לא ניתן להשתמש בסיסמה הזו – בחרו סיסמה אחרת');
+  await env.DB.batch([
+    env.DB.prepare("UPDATE mm_accounts SET password_hash = ?, password_salt = 'system', legacy_sha256 = NULL, legacy_pbkdf2 = NULL WHERE id = ?").bind(key, a.id),
+    // שאר החיבורים של המשתמש מתנתקים (החיבור הנוכחי נשאר)
+    env.DB.prepare('DELETE FROM mm_sessions WHERE account_id = ? AND token_hash != ?').bind(a.id, ctx.sessionHash || ''),
+  ]);
+  await logAction(env, request, ctx, { kind: 'auth', action: hasPassword ? 'החלפת סיסמה אישית' : 'יצירת סיסמה אישית', target: a.display_name });
+  return json({ has_password: true });
 }
 
 export function requireAdmin(ctx) {

@@ -8,6 +8,7 @@ export const ADMIN_URL = '/marie-mikra/admin';
 export const authState = {
   loggedIn: false,
   principal: null,   // { label, master, perms[], via }
+  user: null,        // the full user from the server (name, email, method, has_password)
   paths: null,
   error: '',
 };
@@ -26,6 +27,7 @@ export async function refreshStatus() {
     const u = me.user;
     authState.loggedIn = true;
     authState.principal = { label: u.name, master: !!u.is_admin, perms: u.permissions || [], via: u.method };
+    authState.user = u;
     const cfg = await server('config').catch(() => ({ paths: null }));
     authState.paths = cfg.paths;
   } catch (e) {
@@ -36,3 +38,4 @@ export async function refreshStatus() {
 }
 
 export const logout = () => server('auth/logout', { method: 'POST', body: {} });
+export const changeOwnPassword = (current, password) => server('auth/password', { method: 'POST', body: { current, password } });

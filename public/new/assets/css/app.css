@@ -480,7 +480,10 @@ select.input { cursor: pointer; }
 .login-title { font-size: 1.15rem; font-weight: 800; text-align: center; }
 .who { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem; border-radius: 9px; background: var(--surface-2); color: var(--text-2); font-size: .88rem; }
 .who > i { color: var(--primary); font-size: 1.1rem; }
-.who span { flex: 1; font-weight: 600; color: var(--text); }
+.who span, .who .who-name { flex: 1; font-weight: 600; color: var(--text); }
+.who .who-name { border: 0; background: none; font: inherit; font-weight: 600; text-align: start; cursor: pointer; padding: 0; }
+.who .who-name:hover { color: var(--primary); text-decoration: underline; }
+.alert-info { background: var(--primary-soft); color: var(--primary); border-color: color-mix(in srgb, var(--primary) 25%, transparent); }
 .token-login summary { cursor: pointer; color: var(--text-2); font-size: .88rem; margin-bottom: .6rem; }
 .login-foot { padding-top: .8rem; border-top: 1px solid var(--border); }
 

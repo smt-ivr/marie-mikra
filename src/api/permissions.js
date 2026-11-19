@@ -18,11 +18,12 @@ export const PERMISSIONS = {
   tzintuk_edit: 'הפעלת וניהול צינתוקים',
   logs_view: 'צפייה בלוגים',
   new_site: 'ממשק חדש',
+  self_password: 'יצירת והחלפת סיסמה אישית',
   admin: 'ניהול המערכת',
 };
 
-// ברירת מחדל למשתמש חדש: כל העבודה באתר, בלי ניהול המערכת
-export const DEFAULT_PERMISSIONS = Object.keys(PERMISSIONS).filter((p) => p !== 'admin');
+// ברירת מחדל למשתמש חדש: כל העבודה באתר, בלי ניהול המערכת ובלי ניהול סיסמה אישית
+export const DEFAULT_PERMISSIONS = Object.keys(PERMISSIONS).filter((p) => p !== 'admin' && p !== 'self_password');
 
 export function permissionsOf(account) {
   if (!account) return [];

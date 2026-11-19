@@ -221,5 +221,53 @@ html.ms-no-admin #mmBarAdmin { display: none !important; }
 }
 .mm-userbar a:hover, .mm-userbar button:hover { background: #e9ecef; color: #0056b3; }
 .mm-userbar .mm-sep { width: 1px; height: 18px; background: #dee2e6; }
+/* בתוך שורת הלשוניות: בקצה השמאלי, בלי לצוף */
+.mm-userbar.mm-inline {
+    position: static; margin-inline-start: auto; align-self: center; flex-shrink: 0;
+    box-shadow: none; background: #f8f9fa; margin-top: 6px; margin-bottom: 6px;
+}
 @media (max-width: 600px) { .mm-userbar .mm-label { display: none; } .mm-userbar .mm-name { max-width: 110px; } }
 @media print { .mm-userbar { display: none !important; } }
+
+/* ============================================================
+   אזור אישי: פרטי המשתמש ויצירה / החלפה של סיסמה
+   ============================================================ */
+.mm-pa-overlay {
+    position: fixed; inset: 0; z-index: 9500; display: flex; align-items: center; justify-content: center; padding: 16px;
+    background: rgba(33, 37, 41, .55); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; color: #343a40; direction: rtl;
+}
+.mm-pa {
+    width: 100%; max-width: 440px; max-height: calc(100vh - 32px); overflow-y: auto;
+    background: #fff; border-radius: 12px; box-shadow: 0 1rem 3rem rgba(0, 0, 0, .25); padding: 20px 22px;
+}
+.mm-pa-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #dee2e6; padding-bottom: 12px; margin-bottom: 14px; }
+.mm-pa-head h2 { margin: 0; font-size: 1.25rem; font-weight: 600; color: #343a40; }
+.mm-pa-head h2 i { color: #007bff; margin-left: 6px; }
+.mm-pa-x { border: 0; background: none; font-size: 1.8rem; line-height: 1; cursor: pointer; color: #495057; padding: 0 4px; }
+.mm-pa-x:hover { color: #dc3545; }
+.mm-pa-note { background: #cfe2ff; color: #0056b3; border: 1px solid #9ec5fe; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: .92rem; }
+.mm-pa-note i { margin-left: 6px; }
+.mm-pa-info { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0 0 16px; font-size: .92rem; }
+.mm-pa-info dt { color: #6c757d; }
+.mm-pa-info dd { margin: 0; font-weight: 500; }
+.mm-pa-form h3 { margin: 0 0 10px; font-size: 1.05rem; font-weight: 600; color: #007bff; }
+.mm-pa-form label { display: block; font-size: .88rem; color: #6c757d; margin-bottom: 10px; }
+.mm-pa-form input {
+    display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: .6rem .8rem;
+    border: 1px solid #adb5bd; border-radius: .375rem; font-size: 1rem; color: #495057;
+}
+.mm-pa-form input:focus { outline: 0; border-color: #007bff; box-shadow: 0 0 0 .2rem #cfe2ff; }
+.mm-pa-msg { min-height: 1.2em; font-size: .9rem; margin: 4px 0 10px; }
+.mm-pa-msg.err { color: #b02a37; }
+.mm-pa-msg.ok { color: #146c43; }
+.mm-pa-actions { display: flex; justify-content: flex-start; gap: 8px; }
+.mm-pa-actions button {
+    border-radius: .375rem; padding: .55rem 1.1rem; font: inherit; font-weight: 500; cursor: pointer;
+    border: 1px solid #dee2e6; background: #f8f9fa; color: #212529;
+}
+.mm-pa-actions .mm-pa-save { background: #007bff; border-color: #007bff; color: #fff; }
+.mm-pa-actions .mm-pa-save:hover:not(:disabled) { background: #0056b3; }
+.mm-pa-actions button:disabled { opacity: .65; cursor: not-allowed; }
+.mm-pa-muted { color: #6c757d; font-size: .9rem; margin: 0; }
+.mm-userbar .mm-name { cursor: pointer; border-radius: 999px; }
