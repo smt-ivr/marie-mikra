@@ -21,6 +21,19 @@ const SCRIPT_DEFAULTS = {
   archive_folder: "'ivr2:/מבחנים-קודמים'",
 };
 
+const LOGO_URL = 'https://smti.uk/smt.png';
+
+async function logo(env, request) {
+  try {
+    const res = await fetch(LOGO_URL, { cf: { cacheEverything: true, cacheTtl: 86400 } });
+    const type = res.headers.get('content-type') || '';
+    if (res.ok && type.startsWith('image/')) {
+      return new Response(res.body, { headers: { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' } });
+    }
+  } catch { /* נופל לסמל המובנה */ }
+  return asset(env, request, '/new/assets/img/logo.svg');
+}
+
 async function asset(env, request, localPath) {
   const url = new URL(request.url);
   url.pathname = localPath;
@@ -76,8 +89,9 @@ export default {
 
     const local = path.slice(BASE.length) || '/';
 
-    // הלוגו של האתר המקורי (smt.png) – הקובץ לא היה בקבצי האתר; מוצג מהכתובת הקבועה
-    if (local === '/smt.png') return Response.redirect('https://smti.uk/smt.png', 302);
+    // הלוגו (smt.png) – גם הסמלון בלשונית הדפדפן. מוגש מאותה כתובת של האתר (בלי הפניה),
+    // כי דפדפנים לא תמיד מציגים סמלון שמגיע בהפניה לכתובת אחרת
+    if (local === '/smt.png' || local === '/favicon.ico') return logo(env, request);
 
     // האתר המקורי: הכתובות (ברירות המחדל שלו) נלקחות מהגדרות הניהול
     if (local === '/js/script.js') {
