@@ -13,6 +13,7 @@ import { logAction } from './audit.js';
 import { getConfig } from './settings.js';
 import { getPaths } from './yemot-paths.js';
 import { requirePermission } from './permissions.js';
+import { RELEASE, RELEASE_NOTE } from '../version.js';
 
 // מפתחות שהאתר שמר בדפדפן (טוקנים וסיסמאות) – נמחקים ומדווחים
 const KNOWN_BROWSER_KEYS = ['api_token', 'username', 'password'];
@@ -73,6 +74,11 @@ export async function handleApi(request, env, path) {
     if (path === 'auth/options' && m === 'GET') return await loginOptions(env);
     if (path === 'auth/setup' && m === 'POST') return await setup(request, env);
     if (path === 'auth/logout' && m === 'POST') return await logout(request, env);
+    // מספר הגרסה וזמן ההעלאה (מוצג בקטן בתחתית האתר)
+    if (path === 'version' && m === 'GET') {
+      const meta = env.CF_VERSION_METADATA || {};
+      return json({ release: RELEASE, note: RELEASE_NOTE, deployed_at: meta.timestamp || null, id: meta.id ? String(meta.id).slice(0, 8) : null });
+    }
 
     const ctx = await authenticate(request, env);
 

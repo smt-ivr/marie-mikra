@@ -271,3 +271,11 @@ html.ms-no-admin #mmBarAdmin { display: none !important; }
 .mm-pa-actions button:disabled { opacity: .65; cursor: not-allowed; }
 .mm-pa-muted { color: #6c757d; font-size: .9rem; margin: 0; }
 .mm-userbar .mm-name { cursor: pointer; border-radius: 999px; }
+
+/* מספר גרסה – קטן ושקוף בתחתית, לא לוכד לחיצות */
+.mm-version {
+    position: fixed; bottom: 4px; left: 8px; z-index: 10000;
+    font: 11px system-ui, -apple-system, 'Segoe UI', Arial, sans-serif; color: #6c757d; opacity: .55;
+    direction: rtl; pointer-events: none; user-select: none;
+}
+@media print { .mm-version { display: none !important; } }

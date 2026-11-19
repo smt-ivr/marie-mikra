@@ -592,6 +592,19 @@ $('previewBtn').onclick = async () => {
   } catch (err) { flash('settingsMsg', err.message, true); }
 };
 
+// ===== מספר גרסה בקטן בתחתית =====
+(async () => {
+  try {
+    const v = await api('GET', 'version');
+    const when = v.deployed_at ? new Intl.DateTimeFormat('he-IL', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(v.deployed_at)) : '';
+    const el = document.createElement('div');
+    el.style.cssText = 'text-align:center;font-size:11px;color:#6c757d;opacity:.6;padding:16px 0 10px';
+    el.textContent = `גרסה ${v.release}${when ? ` · עלתה ${when}` : ''}`;
+    el.title = [v.note, v.id ? `מזהה פריסה: ${v.id}` : ''].filter(Boolean).join('\n');
+    document.body.appendChild(el);
+  } catch (e) { /* ignore */ }
+})();
+
 // ===== התחלה =====
 (async () => {
   try {
